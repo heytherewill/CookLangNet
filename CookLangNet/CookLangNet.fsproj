@@ -8,6 +8,7 @@
   <ItemGroup>
     <Compile Include="Properties.fs" />
     <Compile Include="Models.fs" />
+    <Compile Include="Parser.fs" />
   </ItemGroup>
 
   <ItemGroup>
