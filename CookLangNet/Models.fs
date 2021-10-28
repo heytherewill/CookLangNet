@@ -6,12 +6,12 @@ type UnitOfMeasurement = string
 
 type IngredientAmount = {
     quantity: float
-    unit: UnitOfMeasurement
+    unit: UnitOfMeasurement option
 }
 
 type Ingredient = {
     name: string
-    amount: IngredientAmount
+    amount: IngredientAmount option
 }
 
 type Equipment = {
@@ -23,7 +23,7 @@ type Direction = {
 }
 
 type Timer = {
-    quantity: float
+    time: float
     unit: string
 }
 
