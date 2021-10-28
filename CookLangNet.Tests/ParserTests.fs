@@ -5,10 +5,12 @@ open FParsec
 open FsCheck.Xunit
 open FsUnit.Xunit
 open Generators
+open System
 
 let testParserSuccess parser stringToParse expectedValue =
-    match runParserOnString parser () "Test" stringToParse with
-    | Success(actualValue, _, _) -> (expectedValue |> should equal actualValue)
+    let parserResult = runParserOnString parser () "Test" stringToParse 
+    match parserResult with
+    | Success(actualValue, _, _) -> (actualValue |> should equal expectedValue)
     | Failure _ -> failwith "Parser failed"
 
 module CommentParser =
@@ -29,3 +31,24 @@ module CommentParser =
         let stringToParse = @"//" + comment
         let expectedValue = ParsedLine.Comment (comment.Trim())
         testCommentParser stringToParse expectedValue
+
+module MetadataParser = 
+
+    let testMetadataParser stringToParse expectedValue = 
+        testParserSuccess metadata stringToParse expectedValue
+        
+    [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+    let ``The metadata line parser reads an entire line as a metadata tuple`` (key: SingleLineNonWhiteSpaceString) (value: SingleLineNonWhiteSpaceString) =
+        let actualKey = key.Get.Replace(':', Char.MinValue).Trim()
+        let metadata = actualKey + ":" + value.Get
+        let stringToParse = @">> " + metadata
+        let expectedValue = ParsedLine.Metadata (actualKey, value.Get.Trim())
+        testMetadataParser stringToParse expectedValue
+
+    [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+    let ``The space after the comment delimiter is optional`` (key: SingleLineNonWhiteSpaceString) (value: SingleLineNonWhiteSpaceString) =
+        let actualKey = key.Get.Replace(':', Char.MinValue).Trim()
+        let metadata = actualKey + ":" + value.Get
+        let stringToParse = @">>" + metadata
+        let expectedValue = ParsedLine.Metadata (actualKey, value.Get.Trim())
+        testMetadataParser stringToParse expectedValue
