@@ -5,6 +5,8 @@ open CookLangNet.Parser
 open System.IO
 open System.Text
 open System.Text.RegularExpressions
+open System
+open FsCheck
 
 type SingleWordNonWhiteSpaceString = SingleWordNonWhiteSpaceString of string with
     member x.Get = match x with SingleWordNonWhiteSpaceString s -> s
@@ -17,6 +19,10 @@ type SingleLineNonWhiteSpaceString = SingleLineNonWhiteSpaceString of string wit
 type TrimmedSingleLineNonWhiteSpaceString = TrimmedSingleLineNonWhiteSpaceString of string with
     member x.Get = match x with TrimmedSingleLineNonWhiteSpaceString s -> s
     override x.ToString() = x.Get
+
+type NormalPositiveFloat = NormalPositiveFloat of float with
+    member x.Get = match x with NormalPositiveFloat f -> f
+    override x.ToString() = x.Get.ToString()
 
 let private transformIntoSingleLineString s =
     if s = null then 
@@ -35,14 +41,16 @@ let private transformIntoSingleLineString s =
 
         builder.ToString()
 
+let private truth x = true
+
 let private removeSpaces (s: string) =
     Regex.Replace(s, @"\s+", "");
 
-let private transformIntoSingleWordString = 
-    transformIntoSingleLineString >> removeSpaces
-
 let private filterEmptyStrings s =
-    not (System.String.IsNullOrWhiteSpace(s))
+    not (String.IsNullOrWhiteSpace(s))
+
+let private filterNanAndInfinities f =
+    f <> Double.NaN && f <> Double.PositiveInfinity && f <> Double.NegativeInfinity
 
 type Default =
     static member SingleLineNonWhiteSpaceString () =
@@ -59,3 +67,8 @@ type Default =
         Default.String() 
         |> mapFilter (transformIntoSingleLineString >> removeSpaces) filterEmptyStrings
         |> convert SingleWordNonWhiteSpaceString string
+
+    static member NormalPositiveFloat () =
+        Default.NormalFloat()
+        |> mapFilter (float >> abs >> NormalFloat) truth
+        |> convert (float >> NormalPositiveFloat) (string >> float >> NormalFloat)

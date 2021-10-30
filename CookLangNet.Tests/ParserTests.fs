@@ -1,11 +1,14 @@
 module Tests
 
+open CookLangNet
 open CookLangNet.Parser
 open FParsec
 open FsCheck.Xunit
 open FsUnit.Xunit
 open Generators
 open System
+open FsCheck
+open System.Text.RegularExpressions
 
 let internal testParser (parser: Parser<'a, unit>) stringToParse (expectedValue: 'a) =
     let parserResult = runParserOnString parser () "Test" stringToParse 
@@ -63,6 +66,11 @@ module MetadataParser =
         testMetadataParser stringToParse expectedValue
 
 module StepParser =
+
+    // These parsers will purposefully fail to parse incomplete braces
+    // thus making testing these outside the scope of these tests.
+    let removeCurlyBraces s = Regex.Replace(s, @"({|})+", "");
+    
     module Equipment =
 
         let internal testEquipmentParser stringToParse expectedValue expectedState =
@@ -70,22 +78,143 @@ module StepParser =
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word pieces of equipment delimited by space`` (equipmentName: SingleWordNonWhiteSpaceString) =
-            let stringToParse = @"#" + equipmentName.Get + " "
-            let expectedValue = equipmentName.Get
-            let parsedEquipment = ParsedEquipment { name = equipmentName.Get }
+            let actualEquipmentName = removeCurlyBraces equipmentName.Get
+            let stringToParse = @"#" + actualEquipmentName + " "
+            let expectedValue = actualEquipmentName
+            let parsedEquipment = ParsedEquipment { name = actualEquipmentName }
             let expectedUserState = [ parsedEquipment ]
             testEquipmentParser stringToParse expectedValue expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses multi-word pieces of equipment`` (equipmentName: SingleLineNonWhiteSpaceString) =
-            let stringToParse = @"#" + equipmentName.Get + "{}"
-            let expectedValue = equipmentName.Get
-            let parsedEquipment = ParsedEquipment { name = equipmentName.Get }
+            let actualEquipmentName = removeCurlyBraces equipmentName.Get
+            let stringToParse = @"#" + actualEquipmentName + "{}"
+            let expectedValue = actualEquipmentName
+            let parsedEquipment = ParsedEquipment { name = actualEquipmentName }
             let expectedUserState = [ parsedEquipment ]
             testEquipmentParser stringToParse expectedValue expectedUserState
 
     module Ingredient =
 
-        let internal testEquipmentParser stringToParse expectedValue expectedState =
-            testParserWithState equipment stringToParse expectedValue [] expectedState
+        let internal testIngredientParser stringToParse expectedValue expectedState =
+            testParserWithState ingredient stringToParse expectedValue [] expectedState
 
+        let formatIngredients ingredientName amountTuple =
+            @"@" + ingredientName + "{" + 
+                match amountTuple with
+                | None -> "}"
+                | Some (quantity: float, unit) -> 
+                    quantity.ToString() + 
+                        match unit with
+                        | None -> "}"
+                        | Some actualUnit -> "%" + actualUnit + "}"
+
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses single word ingredients delimited by space`` (ingredientName: SingleWordNonWhiteSpaceString) =
+            let actualIngredientName = removeCurlyBraces ingredientName.Get
+            let stringToParse = @"@" + actualIngredientName + " "
+            let expectedValue = actualIngredientName
+            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = None }
+            let expectedUserState = [ parsedIngredient ]
+            testIngredientParser stringToParse expectedValue expectedUserState
+
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses multi-word ingredients without specified amounts`` (ingredientName: SingleLineNonWhiteSpaceString) =
+            let actualIngredientName = removeCurlyBraces ingredientName.Get
+            let stringToParse = formatIngredients actualIngredientName None
+            let expectedValue = actualIngredientName
+            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = None }
+            let expectedUserState = [ parsedIngredient ]
+            testIngredientParser stringToParse expectedValue expectedUserState
+            
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses single word ingredients with float amounts and no units`` (ingredientName: SingleWordNonWhiteSpaceString) (quantity: NormalPositiveFloat) =
+            let actualIngredientName = removeCurlyBraces ingredientName.Get
+            let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, None))
+            let expectedValue = actualIngredientName
+            let amount = { quantity = quantity.Get; unit = None }
+            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let expectedUserState = [ parsedIngredient ]
+            testIngredientParser stringToParse expectedValue expectedUserState
+
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses multi-word ingredients with float amounts and no units`` (ingredientName: SingleLineNonWhiteSpaceString) (quantity: NormalPositiveFloat) =
+            let actualIngredientName = removeCurlyBraces ingredientName.Get
+            let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, None))
+            let expectedValue = actualIngredientName
+            let amount = { quantity = quantity.Get; unit = None }
+            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let expectedUserState = [ parsedIngredient ]
+            testIngredientParser stringToParse expectedValue expectedUserState
+
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses single word ingredients with integer amounts and no units`` (ingredientName: SingleWordNonWhiteSpaceString) (quantity: PositiveInt) =
+            let actualIngredientName = removeCurlyBraces ingredientName.Get
+            let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, None))
+            let expectedValue = actualIngredientName
+            let amount = { quantity = float quantity.Get; unit = None }
+            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let expectedUserState = [ parsedIngredient ]
+            testIngredientParser stringToParse expectedValue expectedUserState
+
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses multi-word ingredients with integer amounts and no units`` (ingredientName: SingleLineNonWhiteSpaceString) (quantity: PositiveInt) =
+            let actualIngredientName = removeCurlyBraces ingredientName.Get
+            let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, None))
+            let expectedValue = actualIngredientName
+            let amount = { quantity = float quantity.Get; unit = None }
+            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let expectedUserState = [ parsedIngredient ]
+            testIngredientParser stringToParse expectedValue expectedUserState
+
+
+
+
+
+
+
+            
+            
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses single word ingredients with float amounts and arbitrary units`` (ingredientName: SingleWordNonWhiteSpaceString) (quantity: NormalPositiveFloat) (unit: SingleLineNonWhiteSpaceString) =
+            let actualIngredientName = removeCurlyBraces ingredientName.Get
+            let actualUnit = removeCurlyBraces unit.Get
+            let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, Some actualUnit))
+            let expectedValue = actualIngredientName
+            let amount = { quantity = quantity.Get; unit = Some actualUnit }
+            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let expectedUserState = [ parsedIngredient ]
+            testIngredientParser stringToParse expectedValue expectedUserState
+
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses multi-word ingredients with float amounts and arbitrary units`` (ingredientName: SingleLineNonWhiteSpaceString) (quantity: NormalPositiveFloat) (unit: SingleLineNonWhiteSpaceString) =
+            let actualIngredientName = removeCurlyBraces ingredientName.Get
+            let actualUnit = removeCurlyBraces unit.Get
+            let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, Some actualUnit))
+            let expectedValue = actualIngredientName
+            let amount = { quantity = quantity.Get; unit = Some actualUnit }
+            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let expectedUserState = [ parsedIngredient ]
+            testIngredientParser stringToParse expectedValue expectedUserState
+
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses single word ingredients with integer amounts and arbitrary units`` (ingredientName: SingleWordNonWhiteSpaceString) (quantity: PositiveInt) (unit: SingleLineNonWhiteSpaceString) =
+            let actualIngredientName = removeCurlyBraces ingredientName.Get
+            let actualUnit = removeCurlyBraces unit.Get
+            let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, Some actualUnit))
+            let expectedValue = actualIngredientName
+            let amount = { quantity = float quantity.Get; unit = Some actualUnit }
+            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let expectedUserState = [ parsedIngredient ]
+            testIngredientParser stringToParse expectedValue expectedUserState
+
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses multi-word ingredients with integer amounts and arbitrary units`` (ingredientName: SingleLineNonWhiteSpaceString) (quantity: PositiveInt) (unit: SingleLineNonWhiteSpaceString) =
+            let actualIngredientName = removeCurlyBraces ingredientName.Get
+            let actualUnit = removeCurlyBraces unit.Get
+            let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, Some actualUnit))
+            let expectedValue = actualIngredientName
+            let amount = { quantity = float quantity.Get; unit = Some actualUnit }
+            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let expectedUserState = [ parsedIngredient ]
+            testIngredientParser stringToParse expectedValue expectedUserState

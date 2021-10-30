@@ -5,6 +5,7 @@ open FParsec
 module internal Parser =
     // Intermediate state parser models
     type ParsedStepDecorations = 
+        | ParsedIngredient of Ingredient
         | ParsedEquipment of Equipment
 
     type ParsedLine =
@@ -42,6 +43,23 @@ module internal Parser =
         skipString ">>"
         >>. sepBy1 (manyCharsExcept ':') (pchar ':') 
         |>> metadataFromStringParts
+
+    // Ingredients
+    let private toIngredientAmount (quantity, unit) = 
+        { quantity = quantity; unit = unit }
+
+    let private addComplexIngredientDecoration (name, amount) =
+        let ingredient = ParsedIngredient { name = name; amount = amount }
+        addDecoration ingredient >>% name
+
+    let private addSimpleIngredientDecoration name =
+        addComplexIngredientDecoration (name, None)
+
+    let simpleIngredient        = anyCharsTillSpace >>= addSimpleIngredientDecoration
+    let complexIngredientName   = anyCharsTillChar '{'
+    let complexIngredientAmount = (pfloat) .>>. (opt (skipChar '%' >>. (manyCharsExcept '}'))) |>> toIngredientAmount
+    let complexIngredient = (complexIngredientName .>>. (opt complexIngredientAmount) .>> skipChar '}') >>= addComplexIngredientDecoration
+    let ingredient = pchar '@' >>. ((attempt complexIngredient) <|> simpleIngredient)
 
     // Equipment
     let private addEquipmentDecoration name =
