@@ -8,6 +8,7 @@ module internal Parser =
         | ParsedIngredient of Ingredient
         | ParsedEquipment of Equipment
         | ParsedTimer of Timer
+        | InlineComment  of string
 
     type ParsedLine =
         | Comment of string
@@ -33,6 +34,7 @@ module internal Parser =
     // Comments
     let comment : CookLangParser<string> = skipString "//" >>. restOfLine true |>> trim
     let commentLine = comment |>> ParsedLine.Comment
+    let inlineComment = comment |>> InlineComment |>> addDecoration >>% ""
 
     // Metadata
     let metadataFromStringParts (list: string list) =
