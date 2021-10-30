@@ -23,7 +23,7 @@ type Direction = {
 }
 
 type Timer = {
-    time: float
+    duration: float
     unit: string
 }
 

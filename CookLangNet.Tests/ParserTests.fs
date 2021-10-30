@@ -207,7 +207,28 @@ module StepParser =
             let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
-
+        
+    module Timer =
+        let internal testTimerParser stringToParse expectedValue expectedState =
+            testParserWithState timer stringToParse expectedValue [] expectedState
+            
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses timers with integer amounts and arbitrary units`` (duration: PositiveInt) (unit: SingleWordNonWhiteSpaceString) =
+            let actualUnit = removeCurlyBraces unit.Get
+            let stringToParse = "~{" + duration.Get.ToString() + "%" + actualUnit + "}"
+            let expectedValue = duration.Get.ToString() + " " + actualUnit
+            let parsedIngredient = ParsedTimer { duration = float duration.Get ; unit = actualUnit }
+            let expectedUserState = [ parsedIngredient ]
+            testTimerParser stringToParse expectedValue expectedUserState
+        
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses timers with float durations and arbitrary units`` (duration: NormalPositiveFloat) (unit: SingleWordNonWhiteSpaceString) =
+            let actualUnit = removeCurlyBraces unit.Get
+            let stringToParse = "~{" + duration.Get.ToString() + "%" + actualUnit + "}"
+            let expectedValue = duration.Get.ToString() + " " + actualUnit
+            let parsedIngredient = ParsedTimer { duration = duration.Get ; unit = actualUnit }
+            let expectedUserState = [ parsedIngredient ]
+            testTimerParser stringToParse expectedValue expectedUserState
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses multi-word ingredients with integer amounts and arbitrary units`` (ingredientName: SingleLineNonWhiteSpaceString) (quantity: PositiveInt) (unit: SingleLineNonWhiteSpaceString) =
             let actualIngredientName = removeCurlyBraces ingredientName.Get

@@ -7,6 +7,7 @@ module internal Parser =
     type ParsedStepDecorations = 
         | ParsedIngredient of Ingredient
         | ParsedEquipment of Equipment
+        | ParsedTimer of Timer
 
     type ParsedLine =
         | Comment of string
@@ -70,3 +71,16 @@ module internal Parser =
     let private complexEquipment = anyCharsTillString "{}" >>= addEquipmentDecoration 
     let equipment = pchar '#' >>. ((attempt complexEquipment) <|> simpleEquipment)
 
+    // Timer
+    let private addTimerDecoration (duration, unit) =
+        let timer = ParsedTimer { duration = duration; unit = unit}
+        addDecoration timer >>% (duration.ToString() + " " + unit)
+
+    let timer = skipString "~{" >>. (pfloat .>>. (skipChar '%' >>. (manyCharsExcept '}'))) >>= addTimerDecoration
+
+    // Steps
+    //let parseStepUntilDecoration : CookLangParser<string> = 
+    //    manyCharsExceptThese decorationChars
+    //let parseDecoration = choice [ ingredient; equipment ; timer ; inlineComment]
+    //let step = 
+    //let parseLine = (restOfLine true) |>> choice [ metadata ; commentLine ; step ]
