@@ -27,8 +27,6 @@ module internal Parser =
     let trim (s: string) = s.Trim()
         
     // Type aliases
-    type CookLangParser<'a> = Parser<'a, unit>
-    type StepParser = Parser<string, ParsedStepDecorations list>
     let decorationChars = ['#'; '@'; '~' ; '/']
 
     // User State manipulation
@@ -36,7 +34,7 @@ module internal Parser =
     let clearUserState s = updateUserState (fun _ -> []) >>% s
 
     // Comments
-    let comment : CookLangParser<string> = skipString "//" >>. restOfLine true |>> trim
+    let comment = skipString "//" >>. restOfLine true |>> trim
     let commentLine = comment |>> ParsedLine.Comment
     let inlineComment = comment |>> InlineComment |>> addDecoration >>% ""
 
@@ -46,17 +44,17 @@ module internal Parser =
         let value = list.Tail |> String.concat ":" |> trim
         Metadata(key, value)
 
-    let metadata : CookLangParser<ParsedLine> = 
+    let metadata =
         skipString ">>"
         >>. sepBy1 (manyCharsExcept ':') (pchar ':') 
         |>> metadataFromStringParts
 
     // Ingredients
     let private toIngredientAmount (quantity, unit) = 
-        { quantity = quantity; unit = unit }
+        { Quantity = quantity; Unit = unit }
 
     let private addComplexIngredientDecoration (name, amount) =
-        let ingredient = ParsedIngredient { name = name; amount = amount }
+        let ingredient = ParsedIngredient { Name = name; Amount = amount }
         addDecoration ingredient >>% name
 
     let private addSimpleIngredientDecoration name =
@@ -64,22 +62,22 @@ module internal Parser =
 
     let simpleIngredient        = anyCharsTillSpace >>= addSimpleIngredientDecoration
     let complexIngredientName   = anyCharsTillChar '{'
-    let complexIngredientAmount = (pfloat) .>>. (opt (skipChar '%' >>. (manyCharsExcept '}'))) |>> toIngredientAmount
+    let complexIngredientAmount = pfloat .>>. (opt (skipChar '%' >>. (manyCharsExcept '}'))) |>> toIngredientAmount
     let complexIngredient = (complexIngredientName .>>. (opt complexIngredientAmount) .>> skipChar '}') >>= addComplexIngredientDecoration
-    let ingredient = pchar '@' >>. ((attempt complexIngredient) <|> simpleIngredient)
+    let ingredient = skipChar '@' >>. ((attempt complexIngredient) <|> simpleIngredient)
 
     // Equipment
     let private addEquipmentDecoration name =
-        let equipment = ParsedEquipment { name = name }
+        let equipment = ParsedEquipment { Name = name }
         addDecoration equipment >>% name
 
     let private simpleEquipment  = anyCharsTillSpace       >>= addEquipmentDecoration
-    let private complexEquipment = anyCharsTillString "{}" >>= addEquipmentDecoration 
-    let equipment = pchar '#' >>. ((attempt complexEquipment) <|> simpleEquipment)
+    let private complexEquipment = anyCharsTillString "{}" >>= addEquipmentDecoration
+    let equipment = skipChar '#' >>. ((attempt complexEquipment) <|> simpleEquipment)
 
     // Timer
     let private addTimerDecoration (duration, unit) =
-        let timer = ParsedTimer { duration = duration; unit = unit}
+        let timer = ParsedTimer { Duration = duration; Unit = unit}
         addDecoration timer >>% (duration.ToString() + " " + unit)
 
     let timer = skipString "~{" >>. (pfloat .>>. (skipChar '%' >>. (manyCharsExcept '}'))) >>= addTimerDecoration
@@ -87,15 +85,15 @@ module internal Parser =
     // Steps
     let convertStateToStep (directions, decorations) =
         match decorations with
-        | [] -> Step { directions = directions; timers = []; ingredients = []; neededEquipment = []; comment = "" }
+        | [] -> Step { Directions = directions; Timers = []; Ingredients = []; NeededEquipment = []; Comment = "" }
         | _ ->
             let actualDecorations = decorations |> List.rev
             Step {
-                directions = directions
-                timers = actualDecorations |> List.choose (function ParsedTimer t -> Some t | _ -> None)
-                ingredients = actualDecorations |> List.choose (function ParsedIngredient i -> Some i | _ -> None)
-                neededEquipment = actualDecorations |> List.choose (function ParsedEquipment e -> Some e | _ -> None)
-                comment = "" //decorations |> Seq.choose (function InlineComment c -> Some c | _ -> None) |> Seq.tryHead ?? ""
+                Directions = directions
+                Timers = actualDecorations |> List.choose (function ParsedTimer t -> Some t | _ -> None)
+                Ingredients = actualDecorations |> List.choose (function ParsedIngredient i -> Some i | _ -> None)
+                NeededEquipment = actualDecorations |> List.choose (function ParsedEquipment e -> Some e | _ -> None)
+                Comment = "" //decorations |> Seq.choose (function InlineComment c -> Some c | _ -> None) |> Seq.tryHead ?? ""
             }
 
     let parseStepUntilDecoration = many1CharsExceptThese decorationChars
@@ -105,3 +103,4 @@ module internal Parser =
     let step = (stepDirections .>>. getUserState) |>> convertStateToStep >>= clearUserState
     
     // Line parser
+    let line = choice [ commentLine ; metadata ; step ]

@@ -25,7 +25,7 @@ type NormalPositiveFloat = NormalPositiveFloat of float with
     override x.ToString() = x.Get.ToString()
 
 let private transformIntoSingleLineString s =
-    if s = null then 
+    if isNull s then 
         ""
     else 
         use reader = new StringReader(s)
@@ -35,8 +35,8 @@ let private transformIntoSingleLineString s =
 
         while shouldContinue do 
             let linesRead = reader.ReadLine()
-            shouldContinue <- linesRead <> null
-            if linesRead <> null then
+            shouldContinue <- not <| isNull linesRead 
+            if not <| isNull linesRead then
                 builder.Append(linesRead) |> ignore
 
         builder.ToString()

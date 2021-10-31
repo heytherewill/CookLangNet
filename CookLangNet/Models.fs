@@ -5,33 +5,33 @@ open System.Collections.Generic
 type UnitOfMeasurement = string
 
 type IngredientAmount = {
-    quantity: float
-    unit: UnitOfMeasurement option
+    Quantity: float
+    Unit: UnitOfMeasurement option
 }
 
 type Ingredient = {
-    name: string
-    amount: IngredientAmount option
+    Name: string
+    Amount: IngredientAmount option
 }
 
 type Equipment = {
-    name: string
+    Name: string
 }
 
 type Timer = {
-    duration: float
-    unit: string
+    Duration: float
+    Unit: string
 }
 
 type Step = {
-    directions: string
-    timers: Timer list
-    ingredients: Ingredient list
-    neededEquipment: Equipment list
-    comment: string
+    Directions: string
+    Timers: Timer list
+    Ingredients: Ingredient list
+    NeededEquipment: Equipment list
+    Comment: string
 }
 
 type Recipe = {
-    steps: Step list
-    metadata: IDictionary<string, string>
+    Steps: Step list
+    Metadata: IDictionary<string, string>
 }

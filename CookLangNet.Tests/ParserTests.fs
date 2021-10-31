@@ -26,7 +26,6 @@ let internal testParserWithState (parser: Parser<'a, 'b>) stringToParse (expecte
 
 
 module CommentParser =
-
     let internal testCommentParser stringToParse expectedValue = 
         testParser commentLine stringToParse expectedValue
 
@@ -45,7 +44,6 @@ module CommentParser =
         testCommentParser stringToParse expectedValue
 
 module MetadataParser = 
-
     let internal testMetadataParser stringToParse expectedValue = 
         testParser metadata stringToParse expectedValue
         
@@ -66,13 +64,11 @@ module MetadataParser =
         testMetadataParser stringToParse expectedValue
 
 module StepParser =
-
     // These parsers will purposefully fail to parse incomplete braces
     // thus making testing these outside the scope of these tests.
     let removeCurlyBraces s = Regex.Replace(s, @"({|})+", "");
     
     module Equipment =
-
         let internal testEquipmentParser stringToParse expectedValue expectedState =
             testParserWithState equipment stringToParse expectedValue [] expectedState
 
@@ -81,7 +77,7 @@ module StepParser =
             let actualEquipmentName = removeCurlyBraces equipmentName.Get
             let stringToParse = @"#" + actualEquipmentName + " "
             let expectedValue = actualEquipmentName
-            let parsedEquipment = ParsedEquipment { name = actualEquipmentName }
+            let parsedEquipment = ParsedEquipment { Name = actualEquipmentName }
             let expectedUserState = [ parsedEquipment ]
             testEquipmentParser stringToParse expectedValue expectedUserState
 
@@ -90,12 +86,11 @@ module StepParser =
             let actualEquipmentName = removeCurlyBraces equipmentName.Get
             let stringToParse = @"#" + actualEquipmentName + "{}"
             let expectedValue = actualEquipmentName
-            let parsedEquipment = ParsedEquipment { name = actualEquipmentName }
+            let parsedEquipment = ParsedEquipment { Name = actualEquipmentName }
             let expectedUserState = [ parsedEquipment ]
             testEquipmentParser stringToParse expectedValue expectedUserState
 
     module Ingredient =
-
         let internal testIngredientParser stringToParse expectedValue expectedState =
             testParserWithState ingredient stringToParse expectedValue [] expectedState
 
@@ -114,7 +109,7 @@ module StepParser =
             let actualIngredientName = removeCurlyBraces ingredientName.Get
             let stringToParse = @"@" + actualIngredientName + " "
             let expectedValue = actualIngredientName
-            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = None }
+            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = None }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
 
@@ -123,7 +118,7 @@ module StepParser =
             let actualIngredientName = removeCurlyBraces ingredientName.Get
             let stringToParse = formatIngredients actualIngredientName None
             let expectedValue = actualIngredientName
-            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = None }
+            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = None }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
             
@@ -132,8 +127,8 @@ module StepParser =
             let actualIngredientName = removeCurlyBraces ingredientName.Get
             let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, None))
             let expectedValue = actualIngredientName
-            let amount = { quantity = quantity.Get; unit = None }
-            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let amount = { Quantity = quantity.Get; Unit = None }
+            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
 
@@ -142,8 +137,8 @@ module StepParser =
             let actualIngredientName = removeCurlyBraces ingredientName.Get
             let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, None))
             let expectedValue = actualIngredientName
-            let amount = { quantity = quantity.Get; unit = None }
-            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let amount = { Quantity = quantity.Get; Unit = None }
+            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
 
@@ -152,8 +147,8 @@ module StepParser =
             let actualIngredientName = removeCurlyBraces ingredientName.Get
             let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, None))
             let expectedValue = actualIngredientName
-            let amount = { quantity = float quantity.Get; unit = None }
-            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let amount = { Quantity = float quantity.Get; Unit = None }
+            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
 
@@ -162,18 +157,10 @@ module StepParser =
             let actualIngredientName = removeCurlyBraces ingredientName.Get
             let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, None))
             let expectedValue = actualIngredientName
-            let amount = { quantity = float quantity.Get; unit = None }
-            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let amount = { Quantity = float quantity.Get; Unit = None }
+            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
-
-
-
-
-
-
-
-            
             
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word ingredients with float amounts and arbitrary units`` (ingredientName: SingleWordNonWhiteSpaceString) (quantity: NormalPositiveFloat) (unit: SingleLineNonWhiteSpaceString) =
@@ -181,8 +168,8 @@ module StepParser =
             let actualUnit = removeCurlyBraces unit.Get
             let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, Some actualUnit))
             let expectedValue = actualIngredientName
-            let amount = { quantity = quantity.Get; unit = Some actualUnit }
-            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let amount = { Quantity = quantity.Get; Unit = Some actualUnit }
+            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
 
@@ -192,8 +179,8 @@ module StepParser =
             let actualUnit = removeCurlyBraces unit.Get
             let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, Some actualUnit))
             let expectedValue = actualIngredientName
-            let amount = { quantity = quantity.Get; unit = Some actualUnit }
-            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let amount = { Quantity = quantity.Get; Unit = Some actualUnit }
+            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
 
@@ -203,8 +190,8 @@ module StepParser =
             let actualUnit = removeCurlyBraces unit.Get
             let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, Some actualUnit))
             let expectedValue = actualIngredientName
-            let amount = { quantity = float quantity.Get; unit = Some actualUnit }
-            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let amount = { Quantity = float quantity.Get; Unit = Some actualUnit }
+            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
 
@@ -214,8 +201,8 @@ module StepParser =
             let actualUnit = removeCurlyBraces unit.Get
             let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, Some actualUnit))
             let expectedValue = actualIngredientName
-            let amount = { quantity = float quantity.Get; unit = Some actualUnit }
-            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let amount = { Quantity = float quantity.Get; Unit = Some actualUnit }
+            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
         
@@ -228,7 +215,7 @@ module StepParser =
             let actualUnit = removeCurlyBraces unit.Get
             let stringToParse = "~{" + duration.Get.ToString() + "%" + actualUnit + "}"
             let expectedValue = duration.Get.ToString() + " " + actualUnit
-            let parsedIngredient = ParsedTimer { duration = float duration.Get ; unit = actualUnit }
+            let parsedIngredient = ParsedTimer { Duration = float duration.Get ; Unit = actualUnit }
             let expectedUserState = [ parsedIngredient ]
             testTimerParser stringToParse expectedValue expectedUserState
         
@@ -237,6 +224,6 @@ module StepParser =
             let actualUnit = removeCurlyBraces unit.Get
             let stringToParse = "~{" + duration.Get.ToString() + "%" + actualUnit + "}"
             let expectedValue = duration.Get.ToString() + " " + actualUnit
-            let parsedIngredient = ParsedTimer { duration = duration.Get ; unit = actualUnit }
+            let parsedIngredient = ParsedTimer { Duration = duration.Get ; Unit = actualUnit }
             let expectedUserState = [ parsedIngredient ]
             testTimerParser stringToParse expectedValue expectedUserState
