@@ -18,23 +18,20 @@ type Equipment = {
     name: string
 }
 
-type Direction = {
-    description: string
-}
-
 type Timer = {
     duration: float
     unit: string
 }
 
 type Step = {
+    directions: string
     timers: Timer list
-    directions: Direction list
+    ingredients: Ingredient list
+    neededEquipment: Equipment list
+    comment: string
 }
 
 type Recipe = {
     steps: Step list
-    ingredients: Ingredient list
-    neededEquipment: Equipment list
     metadata: IDictionary<string, string>
 }

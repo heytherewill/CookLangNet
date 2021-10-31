@@ -1,4 +1,4 @@
-module Tests
+module ParserTests
 
 open CookLangNet
 open CookLangNet.Parser
@@ -10,8 +10,8 @@ open System
 open FsCheck
 open System.Text.RegularExpressions
 
-let internal testParser (parser: Parser<'a, unit>) stringToParse (expectedValue: 'a) =
-    let parserResult = runParserOnString parser () "Test" stringToParse 
+let internal testParser parser stringToParse (expectedValue: 'a) =
+    let parserResult = runParserOnString parser [] "Test" stringToParse 
     match parserResult with
     | Success(actualValue, _, _) -> (actualValue |> should equal expectedValue)
     | Failure _ -> failwith "Parser failed"
@@ -207,6 +207,17 @@ module StepParser =
             let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
+
+        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
+        let ``Parses multi-word ingredients with integer amounts and arbitrary units`` (ingredientName: SingleLineNonWhiteSpaceString) (quantity: PositiveInt) (unit: SingleLineNonWhiteSpaceString) =
+            let actualIngredientName = removeCurlyBraces ingredientName.Get
+            let actualUnit = removeCurlyBraces unit.Get
+            let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, Some actualUnit))
+            let expectedValue = actualIngredientName
+            let amount = { quantity = float quantity.Get; unit = Some actualUnit }
+            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
+            let expectedUserState = [ parsedIngredient ]
+            testIngredientParser stringToParse expectedValue expectedUserState
         
     module Timer =
         let internal testTimerParser stringToParse expectedValue expectedState =
@@ -229,13 +240,3 @@ module StepParser =
             let parsedIngredient = ParsedTimer { duration = duration.Get ; unit = actualUnit }
             let expectedUserState = [ parsedIngredient ]
             testTimerParser stringToParse expectedValue expectedUserState
-        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses multi-word ingredients with integer amounts and arbitrary units`` (ingredientName: SingleLineNonWhiteSpaceString) (quantity: PositiveInt) (unit: SingleLineNonWhiteSpaceString) =
-            let actualIngredientName = removeCurlyBraces ingredientName.Get
-            let actualUnit = removeCurlyBraces unit.Get
-            let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, Some actualUnit))
-            let expectedValue = actualIngredientName
-            let amount = { quantity = float quantity.Get; unit = Some actualUnit }
-            let parsedIngredient = ParsedIngredient { name = actualIngredientName; amount = Some amount }
-            let expectedUserState = [ parsedIngredient ]
-            testIngredientParser stringToParse expectedValue expectedUserState
