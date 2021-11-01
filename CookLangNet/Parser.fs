@@ -21,8 +21,8 @@ module internal Parser =
     let anyCharsTillParser p = manyCharsTill anyChar p
     let anyCharsTillChar c = anyCharsTillParser (pchar c)
     let anyCharsTillString s = anyCharsTillParser (pstring s)
-    let decorationChars = ['#'; '@'; '~' ; '/']
     let manyCharsExceptWordDelimiters = manyChars (noneOf [ ',' ; '.' ; '\n'; '\r'; ' ' ])
+    let anyButDecorationDelimiters = noneOf "@#~"
 
     // User State manipulation
     let addDecoration d = updateUserState (fun decorations -> d::decorations)
@@ -56,7 +56,7 @@ module internal Parser =
         addComplexIngredientDecoration (name, None)
 
     let simpleIngredient        = manyCharsExceptWordDelimiters >>= addSimpleIngredientDecoration
-    let complexIngredientName   = manyCharsTill (noneOf ['@']) (pchar '{')
+    let complexIngredientName   = manyCharsTill anyButDecorationDelimiters (pchar '{')
     let complexIngredientAmount = pfloat .>>. (opt (skipChar '%' >>. (manyCharsExcept '}'))) |>> toIngredientAmount
     let complexIngredient = (complexIngredientName .>>. (opt complexIngredientAmount) .>> skipChar '}') >>= addComplexIngredientDecoration
     let ingredient = skipChar '@' >>. ((attempt complexIngredient) <|> simpleIngredient)
@@ -67,7 +67,7 @@ module internal Parser =
         addDecoration equipment >>% name
 
     let private simpleEquipment  = manyCharsExceptWordDelimiters >>= addEquipmentDecoration
-    let private complexEquipment = manyCharsTill (noneOf ['#']) (pstring "{}") >>= addEquipmentDecoration
+    let private complexEquipment = manyCharsTill anyButDecorationDelimiters (pstring "{}") >>= addEquipmentDecoration
     let equipment = skipChar '#' >>. ((attempt complexEquipment) <|> simpleEquipment)
 
     // Timer
@@ -91,7 +91,7 @@ module internal Parser =
                 Comment = "" //decorations |> Seq.choose (function InlineComment c -> Some c | _ -> None) |> Seq.tryHead ?? ""
             }
 
-    let parseStepUntilDecoration = many1CharsExceptThese decorationChars
+    let parseStepUntilDecoration = many1CharsExceptThese ['#'; '@'; '~' ; '/']
     let parseDecoration = choice [ ingredient; equipment ; timer ; inlineComment ]
 
     let stepDirections = (many (parseDecoration <|> parseStepUntilDecoration)) |>> String.concat ""

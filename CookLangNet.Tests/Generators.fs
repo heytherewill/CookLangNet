@@ -1,6 +1,7 @@
 ﻿module Generators
 
 open FsCheck.Arb
+open CookLangNet
 open CookLangNet.Parser
 open System.IO
 open System.Text
@@ -8,20 +9,55 @@ open System.Text.RegularExpressions
 open System
 open FsCheck
 
-type SingleWordNonWhiteSpaceString = SingleWordNonWhiteSpaceString of string with
-    member x.Get = match x with SingleWordNonWhiteSpaceString s -> s
+type SingleWordString = SingleWordString of string with
+    member x.Get = match x with SingleWordString s -> s
     override x.ToString() = x.Get
 
-type SingleLineNonWhiteSpaceString = SingleLineNonWhiteSpaceString of string with
-    member x.Get = match x with SingleLineNonWhiteSpaceString s -> s
+type SingleLineString = SingleLineString of string with
+    member x.Get = match x with SingleLineString s -> s
     override x.ToString() = x.Get
 
-type TrimmedSingleLineNonWhiteSpaceString = TrimmedSingleLineNonWhiteSpaceString of string with
-    member x.Get = match x with TrimmedSingleLineNonWhiteSpaceString s -> s
+type TrimmedSingleLineString = TrimmedSingleLineString of string with
+    member x.Get = match x with TrimmedSingleLineString s -> s
     override x.ToString() = x.Get
 
 type NormalPositiveFloat = NormalPositiveFloat of float with
     member x.Get = match x with NormalPositiveFloat f -> f
+    override x.ToString() = x.Get.ToString()
+
+type SingleWordEquipment = SingleWordEquipment of Equipment with
+    member x.Get = match x with SingleWordEquipment e -> e
+    member x.Serialize() = x.Get.Serialize()
+    override x.ToString() = x.Get.ToString()
+
+type MultiWordEquipment = MultiWordEquipment of Equipment with
+    member x.Get = match x with MultiWordEquipment e -> e
+    member x.Serialize() = x.Get.Serialize()
+    override x.ToString() = x.Get.ToString()
+    
+type SingleWordNoAmountIngredient = SingleWordNoAmountIngredient of Ingredient with
+    member x.Get = match x with SingleWordNoAmountIngredient e -> e
+    member x.Serialize() = x.Get.Serialize()
+    override x.ToString() = x.Get.ToString()
+    
+type MultiWordNoAmountIngredient = MultiWordNoAmountIngredient of Ingredient with
+    member x.Get = match x with MultiWordNoAmountIngredient e -> e
+    member x.Serialize() = x.Get.Serialize()
+    override x.ToString() = x.Get.ToString()
+    
+type SingleWordWithAmountIngredient = SingleWordWithAmountIngredient of Ingredient with
+    member x.Get = match x with SingleWordWithAmountIngredient e -> e
+    member x.Serialize() = x.Get.Serialize()
+    override x.ToString() = x.Get.ToString()
+    
+type MultiWordWithAmountIngredient = MultiWordWithAmountIngredient of Ingredient with
+    member x.Get = match x with MultiWordWithAmountIngredient e -> e
+    member x.Serialize() = x.Get.Serialize()
+    override x.ToString() = x.Get.ToString()
+    
+type ValidTimer = ValidTimer of Timer with
+    member x.Get = match x with ValidTimer e -> e
+    member x.Serialize() = x.Get.Serialize()
     override x.ToString() = x.Get.ToString()
 
 let private transformIntoSingleLineString s =
@@ -39,36 +75,76 @@ let private transformIntoSingleLineString s =
             if not <| isNull linesRead then
                 builder.Append(linesRead) |> ignore
 
-        builder.ToString()
+        /// Removes characters that would cause the individual 
+        // units not to be parsed as expected.
+        Regex.Replace(builder.ToString(), @"({|}|#|@|,|\.|~)+", "")
 
-let private truth x = true
+let private truth _ = true
+let private removeSpaces (s: string) = Regex.Replace(s, @"\s+", "");
+let private filterEmptyStrings s = not (String.IsNullOrWhiteSpace(s))
 
-let private removeSpaces (s: string) =
-    Regex.Replace(s, @"\s+", "");
+let toAmountOption shouldBeSome quantity shouldContainUnit unit = 
+    let unit = if shouldContainUnit then Some unit else None
+    if shouldBeSome then Some { Quantity = quantity; Unit = unit } else None
 
-let private filterEmptyStrings s =
-    not (String.IsNullOrWhiteSpace(s))
-
-let private filterNanAndInfinities f =
-    f <> Double.NaN && f <> Double.PositiveInfinity && f <> Double.NegativeInfinity
+let toEquipment name = { Name = name }
+let toIngredient name amount = { Name = name; Amount = amount }
+let toTimer duration unit = { Duration = duration; Unit = unit }
 
 type Default =
-    static member SingleLineNonWhiteSpaceString () =
+    static member SingleLineString () =
         Default.String() 
         |> mapFilter transformIntoSingleLineString filterEmptyStrings
-        |> convert SingleLineNonWhiteSpaceString string
+        |> convert SingleLineString string
 
-    static member TrimmedSingleLineNonWhiteSpaceString () =
+    static member TrimmedSingleLineString () =
         Default.String() 
         |> mapFilter (transformIntoSingleLineString >> trim) filterEmptyStrings
-        |> convert TrimmedSingleLineNonWhiteSpaceString string
+        |> convert TrimmedSingleLineString string
 
-    static member SingleWordNonWhiteSpaceString () =
+    static member SingleWordString () =
         Default.String() 
         |> mapFilter (transformIntoSingleLineString >> removeSpaces) filterEmptyStrings
-        |> convert SingleWordNonWhiteSpaceString string
-
+        |> convert SingleWordString string
+        
     static member NormalPositiveFloat () =
         Default.NormalFloat()
         |> mapFilter (float >> abs >> NormalFloat) truth
         |> convert (float >> NormalPositiveFloat) (string >> float >> NormalFloat)
+
+    static member AmountOption () =
+        let bool = Default.Bool().Generator
+        let quantity = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
+        let unit = Default.SingleWordString().Generator.Select(fun x -> string x)
+        Gen.map4 toAmountOption bool quantity bool unit |> Arb.fromGen
+
+    static member MultiWordEquipment () =
+        Default.SingleLineString()
+        |> convert (string >> toEquipment >> MultiWordEquipment) (string >> SingleLineString)
+
+    static member SingleWordEquipment () =
+        Default.SingleWordString()
+        |> convert (string >> toEquipment >> SingleWordEquipment) (string >> SingleWordString)
+        
+    static member MultiWordNoAmountIngredient () =
+        let name = Default.SingleLineString().Generator.Select(fun x -> string x)
+        Gen.map2 toIngredient name (Gen.constant None) |> Gen.map MultiWordNoAmountIngredient |> Arb.fromGen
+        
+    static member SingleWordNoAmountIngredient () =
+        let name = Default.SingleWordString().Generator.Select(fun x -> string x)
+        Gen.map2 toIngredient name (Gen.constant None) |> Gen.map SingleWordNoAmountIngredient |> Arb.fromGen
+                
+    static member MultiWordWithAmountIngredient () =
+        let name = Default.SingleLineString().Generator.Select(fun x -> string x)
+        let amount = Default.AmountOption().Generator
+        Gen.map2 toIngredient name amount |> Gen.map MultiWordWithAmountIngredient |> Arb.fromGen
+        
+    static member SingleWordWithAmountIngredient () =
+        let name = Default.SingleWordString().Generator.Select(fun x -> string x)
+        let amount = Default.AmountOption().Generator
+        Gen.map2 toIngredient name amount |> Gen.map SingleWordWithAmountIngredient |> Arb.fromGen
+        
+    static member ValidTimer () =
+        let duration = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
+        let unit = Default.SingleWordString().Generator.Select(fun x -> string x)
+        Gen.map2 toTimer duration unit |> Gen.map ValidTimer |> Arb.fromGen

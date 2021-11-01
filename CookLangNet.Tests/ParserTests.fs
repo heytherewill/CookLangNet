@@ -30,14 +30,14 @@ module CommentParser =
         testParser commentLine stringToParse expectedValue
 
     [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-    let ``The comment line parser reads an entire line as a comment`` (input: SingleLineNonWhiteSpaceString) =
+    let ``The comment line parser reads an entire line as a comment`` (input: SingleLineString) =
         let comment = input.Get
         let stringToParse = @"// " + comment
         let expectedValue = ParsedLine.Comment (comment.Trim())
         testCommentParser stringToParse expectedValue
         
     [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-    let ``The space after the comment delimiter is optional``(input: SingleLineNonWhiteSpaceString) =
+    let ``The space after the comment delimiter is optional``(input: SingleLineString) =
         let comment = input.Get
         let stringToParse = @"//" + comment
         let expectedValue = ParsedLine.Comment (comment.Trim())
@@ -48,7 +48,7 @@ module MetadataParser =
         testParser metadata stringToParse expectedValue
         
     [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-    let ``The metadata line parser reads an entire line as a metadata tuple`` (key: TrimmedSingleLineNonWhiteSpaceString) (value: SingleLineNonWhiteSpaceString) =
+    let ``The metadata line parser reads an entire line as a metadata tuple`` (key: TrimmedSingleLineString) (value: SingleLineString) =
         let actualKey = key.Get.Replace(':', Char.MinValue)
         let metadata = actualKey + ":" + value.Get
         let stringToParse = @">> " + metadata
@@ -56,7 +56,7 @@ module MetadataParser =
         testMetadataParser stringToParse expectedValue
 
     [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-    let ``The space after the comment delimiter is optional`` (key: TrimmedSingleLineNonWhiteSpaceString) (value: SingleLineNonWhiteSpaceString) =
+    let ``The space after the comment delimiter is optional`` (key: TrimmedSingleLineString) (value: SingleLineString) =
         let actualKey = key.Get.Replace(':', Char.MinValue)
         let metadata = actualKey + ":" + value.Get
         let stringToParse = @">>" + metadata
@@ -64,203 +64,100 @@ module MetadataParser =
         testMetadataParser stringToParse expectedValue
 
 module StepParser =
-    /// Removes characters that would prevent the tests to run correctly
-    /// on the isolated parts of the main parser.
-    let pruneInvalidCharacters s = Regex.Replace(s, @"({|}|#|@|,|\.)+", "");
     
     module Equipment =
         let internal testEquipmentParser stringToParse expectedValue expectedState =
             testParserWithState equipment stringToParse expectedValue [] expectedState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses single word pieces of equipment delimited by space`` (equipmentName: SingleWordNonWhiteSpaceString) =
-            let actualEquipmentName = pruneInvalidCharacters equipmentName.Get
-            let stringToParse = @"#" + actualEquipmentName + " "
-            let expectedValue = actualEquipmentName
-            let parsedEquipment = ParsedEquipment { Name = actualEquipmentName }
+        let ``Parses single word pieces of equipment delimited by space`` (equipment: SingleWordEquipment) =
+            let stringToParse = equipment.Serialize() + " "
+            let parsedEquipment = ParsedEquipment equipment.Get
             let expectedUserState = [ parsedEquipment ]
-            testEquipmentParser stringToParse expectedValue expectedUserState
+            testEquipmentParser stringToParse (equipment.ToString()) expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses single word pieces of equipment delimited by a comma`` (equipmentName: SingleWordNonWhiteSpaceString) =
-            let actualEquipmentName = pruneInvalidCharacters equipmentName.Get
-            let stringToParse = @"#" + actualEquipmentName + ","
-            let expectedValue = actualEquipmentName
-            let parsedEquipment = ParsedEquipment { Name = actualEquipmentName }
-            let expectedUserState = [ parsedEquipment ]
-            testEquipmentParser stringToParse expectedValue expectedUserState
+        let ``Parses single word pieces of equipment delimited by a comma``(equipment: SingleWordEquipment) =
+                   let stringToParse = equipment.Serialize() + ","
+                   let parsedEquipment = ParsedEquipment equipment.Get
+                   let expectedUserState = [ parsedEquipment ]
+                   testEquipmentParser stringToParse (equipment.ToString()) expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses single word pieces of equipment delimited by a period`` (equipmentName: SingleWordNonWhiteSpaceString) =
-            let actualEquipmentName = pruneInvalidCharacters equipmentName.Get
-            let stringToParse = @"#" + actualEquipmentName + "."
-            let expectedValue = actualEquipmentName
-            let parsedEquipment = ParsedEquipment { Name = actualEquipmentName }
-            let expectedUserState = [ parsedEquipment ]
-            testEquipmentParser stringToParse expectedValue expectedUserState
+        let ``Parses single word pieces of equipment delimited by a period``(equipment: SingleWordEquipment) =
+                   let stringToParse = equipment.Serialize() + "."
+                   let parsedEquipment = ParsedEquipment equipment.Get
+                   let expectedUserState = [ parsedEquipment ]
+                   testEquipmentParser stringToParse (equipment.ToString()) expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses multi-word pieces of equipment`` (equipmentName: SingleLineNonWhiteSpaceString) =
-            let actualEquipmentName = pruneInvalidCharacters equipmentName.Get
-            let stringToParse = @"#" + actualEquipmentName + "{}"
-            let expectedValue = actualEquipmentName
-            let parsedEquipment = ParsedEquipment { Name = actualEquipmentName }
+        let ``Parses multi-word pieces of equipment`` (equipment: MultiWordEquipment) =
+            let stringToParse = sprintf "#%s{}" (equipment.ToString())
+            let parsedEquipment = ParsedEquipment equipment.Get
             let expectedUserState = [ parsedEquipment ]
-            testEquipmentParser stringToParse expectedValue expectedUserState
+            testEquipmentParser stringToParse (equipment.ToString()) expectedUserState
 
     module Ingredient =
         let internal testIngredientParser stringToParse expectedValue expectedState =
             testParserWithState ingredient stringToParse expectedValue [] expectedState
 
-        let formatIngredients ingredientName amountTuple =
-            @"@" + ingredientName + "{" + 
-                match amountTuple with
-                | None -> "}"
-                | Some (quantity: float, unit) -> 
-                    quantity.ToString() + 
-                        match unit with
-                        | None -> "}"
-                        | Some actualUnit -> "%" + actualUnit + "}"
-
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses single word ingredients delimited by space`` (ingredientName: SingleWordNonWhiteSpaceString) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let stringToParse = @"@" + actualIngredientName + " "
-            let expectedValue = actualIngredientName
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = None }
+        let ``Parses single word ingredients delimited by space`` (ingredient: SingleWordNoAmountIngredient) =
+            let stringToParse = ingredient.Serialize() + " "
+            let expectedValue = ingredient.ToString()
+            let parsedIngredient = ParsedIngredient ingredient.Get
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses single word ingredients delimited by a comma`` (ingredientName: SingleWordNonWhiteSpaceString) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let stringToParse = @"@" + actualIngredientName + ","
-            let expectedValue = actualIngredientName
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = None }
+        let ``Parses single word ingredients delimited by a comma`` (ingredient: SingleWordNoAmountIngredient) =
+            let stringToParse = ingredient.Serialize() + ","
+            let expectedValue = ingredient.ToString()
+            let parsedIngredient = ParsedIngredient ingredient.Get
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
             
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses single word ingredients delimited by a period`` (ingredientName: SingleWordNonWhiteSpaceString) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let stringToParse = @"@" + actualIngredientName + "."
-            let expectedValue = actualIngredientName
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = None }
+        let ``Parses single word ingredients delimited by a period`` (ingredient: SingleWordNoAmountIngredient) =
+            let stringToParse = ingredient.Serialize() + "."
+            let expectedValue = ingredient.ToString()
+            let parsedIngredient = ParsedIngredient ingredient.Get
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses multi-word ingredients without specified amounts`` (ingredientName: SingleLineNonWhiteSpaceString) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let stringToParse = formatIngredients actualIngredientName None
-            let expectedValue = actualIngredientName
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = None }
+        let ``Parses multi-word ingredients without specified amounts`` (ingredient: MultiWordNoAmountIngredient) =
+            let stringToParse = ingredient.Serialize()
+            let expectedValue = ingredient.ToString()
+            let parsedIngredient = ParsedIngredient ingredient.Get
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
             
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses single word ingredients with float amounts and no units`` (ingredientName: SingleWordNonWhiteSpaceString) (quantity: NormalPositiveFloat) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, None))
-            let expectedValue = actualIngredientName
-            let amount = { Quantity = quantity.Get; Unit = None }
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
-            let expectedUserState = [ parsedIngredient ]
-            testIngredientParser stringToParse expectedValue expectedUserState
-
-        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses multi-word ingredients with float amounts and no units`` (ingredientName: SingleLineNonWhiteSpaceString) (quantity: NormalPositiveFloat) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, None))
-            let expectedValue = actualIngredientName
-            let amount = { Quantity = quantity.Get; Unit = None }
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
-            let expectedUserState = [ parsedIngredient ]
-            testIngredientParser stringToParse expectedValue expectedUserState
-
-        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses single word ingredients with integer amounts and no units`` (ingredientName: SingleWordNonWhiteSpaceString) (quantity: PositiveInt) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, None))
-            let expectedValue = actualIngredientName
-            let amount = { Quantity = float quantity.Get; Unit = None }
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
-            let expectedUserState = [ parsedIngredient ]
-            testIngredientParser stringToParse expectedValue expectedUserState
-
-        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses multi-word ingredients with integer amounts and no units`` (ingredientName: SingleLineNonWhiteSpaceString) (quantity: PositiveInt) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, None))
-            let expectedValue = actualIngredientName
-            let amount = { Quantity = float quantity.Get; Unit = None }
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
+        let ``Parses single word ingredients with with arbitrary amounts`` (ingredient: SingleWordWithAmountIngredient)=
+            let stringToParse = ingredient.Serialize()
+            let expectedValue = ingredient.ToString()
+            let parsedIngredient = ParsedIngredient ingredient.Get
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
             
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses single word ingredients with float amounts and arbitrary units`` (ingredientName: SingleWordNonWhiteSpaceString) (quantity: NormalPositiveFloat) (unit: SingleLineNonWhiteSpaceString) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let actualUnit = pruneInvalidCharacters unit.Get
-            let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, Some actualUnit))
-            let expectedValue = actualIngredientName
-            let amount = { Quantity = quantity.Get; Unit = Some actualUnit }
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
+        let ``Parses multi word ingredients with with arbitrary amounts`` (ingredient: MultiWordWithAmountIngredient) =
+            let stringToParse = ingredient.Serialize()
+            let expectedValue = ingredient.ToString()
+            let parsedIngredient = ParsedIngredient ingredient.Get
             let expectedUserState = [ parsedIngredient ]
             testIngredientParser stringToParse expectedValue expectedUserState
 
-        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses multi-word ingredients with float amounts and arbitrary units`` (ingredientName: SingleLineNonWhiteSpaceString) (quantity: NormalPositiveFloat) (unit: SingleLineNonWhiteSpaceString) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let actualUnit = pruneInvalidCharacters unit.Get
-            let stringToParse = formatIngredients actualIngredientName (Some (quantity.Get, Some actualUnit))
-            let expectedValue = actualIngredientName
-            let amount = { Quantity = quantity.Get; Unit = Some actualUnit }
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
-            let expectedUserState = [ parsedIngredient ]
-            testIngredientParser stringToParse expectedValue expectedUserState
-
-        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses single word ingredients with integer amounts and arbitrary units`` (ingredientName: SingleWordNonWhiteSpaceString) (quantity: PositiveInt) (unit: SingleLineNonWhiteSpaceString) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let actualUnit = pruneInvalidCharacters unit.Get
-            let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, Some actualUnit))
-            let expectedValue = actualIngredientName
-            let amount = { Quantity = float quantity.Get; Unit = Some actualUnit }
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
-            let expectedUserState = [ parsedIngredient ]
-            testIngredientParser stringToParse expectedValue expectedUserState
-
-        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses multi-word ingredients with integer amounts and arbitrary units`` (ingredientName: SingleLineNonWhiteSpaceString) (quantity: PositiveInt) (unit: SingleLineNonWhiteSpaceString) =
-            let actualIngredientName = pruneInvalidCharacters ingredientName.Get
-            let actualUnit = pruneInvalidCharacters unit.Get
-            let stringToParse = formatIngredients actualIngredientName (Some (float quantity.Get, Some actualUnit))
-            let expectedValue = actualIngredientName
-            let amount = { Quantity = float quantity.Get; Unit = Some actualUnit }
-            let parsedIngredient = ParsedIngredient { Name = actualIngredientName; Amount = Some amount }
-            let expectedUserState = [ parsedIngredient ]
-            testIngredientParser stringToParse expectedValue expectedUserState
-        
     module Timer =
         let internal testTimerParser stringToParse expectedValue expectedState =
             testParserWithState timer stringToParse expectedValue [] expectedState
             
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses timers with integer amounts and arbitrary units`` (duration: PositiveInt) (unit: SingleWordNonWhiteSpaceString) =
-            let actualUnit = pruneInvalidCharacters unit.Get
-            let stringToParse = "~{" + duration.Get.ToString() + "%" + actualUnit + "}"
-            let expectedValue = duration.Get.ToString() + " " + actualUnit
-            let parsedIngredient = ParsedTimer { Duration = float duration.Get ; Unit = actualUnit }
-            let expectedUserState = [ parsedIngredient ]
-            testTimerParser stringToParse expectedValue expectedUserState
-        
-        [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
-        let ``Parses timers with float durations and arbitrary units`` (duration: NormalPositiveFloat) (unit: SingleWordNonWhiteSpaceString) =
-            let actualUnit = pruneInvalidCharacters unit.Get
-            let stringToParse = "~{" + duration.Get.ToString() + "%" + actualUnit + "}"
-            let expectedValue = duration.Get.ToString() + " " + actualUnit
-            let parsedIngredient = ParsedTimer { Duration = duration.Get ; Unit = actualUnit }
-            let expectedUserState = [ parsedIngredient ]
+        let ``Parses timers with arbitrary amounts and units`` (timer: ValidTimer) =
+            let stringToParse = timer.Serialize()
+            let expectedValue = timer.ToString()
+            let parsedTimer = ParsedTimer timer.Get
+            let expectedUserState = [ parsedTimer ]
             testTimerParser stringToParse expectedValue expectedUserState
