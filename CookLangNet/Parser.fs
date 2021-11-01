@@ -21,13 +21,8 @@ module internal Parser =
     let anyCharsTillParser p = manyCharsTill anyChar p
     let anyCharsTillChar c = anyCharsTillParser (pchar c)
     let anyCharsTillString s = anyCharsTillParser (pstring s)
-    let anyCharsTillSpace = anyCharsTillParser spaces1 
-
-    // Helper functions
-    let trim (s: string) = s.Trim()
-        
-    // Type aliases
     let decorationChars = ['#'; '@'; '~' ; '/']
+    let manyCharsExceptWordDelimiters = manyChars (noneOf [ ',' ; '.' ; '\n'; '\r'; ' ' ])
 
     // User State manipulation
     let addDecoration d = updateUserState (fun decorations -> d::decorations)
@@ -60,8 +55,8 @@ module internal Parser =
     let private addSimpleIngredientDecoration name =
         addComplexIngredientDecoration (name, None)
 
-    let simpleIngredient        = anyCharsTillSpace >>= addSimpleIngredientDecoration
-    let complexIngredientName   = anyCharsTillChar '{'
+    let simpleIngredient        = manyCharsExceptWordDelimiters >>= addSimpleIngredientDecoration
+    let complexIngredientName   = manyCharsTill (noneOf ['@']) (pchar '{')
     let complexIngredientAmount = pfloat .>>. (opt (skipChar '%' >>. (manyCharsExcept '}'))) |>> toIngredientAmount
     let complexIngredient = (complexIngredientName .>>. (opt complexIngredientAmount) .>> skipChar '}') >>= addComplexIngredientDecoration
     let ingredient = skipChar '@' >>. ((attempt complexIngredient) <|> simpleIngredient)
@@ -71,8 +66,8 @@ module internal Parser =
         let equipment = ParsedEquipment { Name = name }
         addDecoration equipment >>% name
 
-    let private simpleEquipment  = anyCharsTillSpace       >>= addEquipmentDecoration
-    let private complexEquipment = anyCharsTillString "{}" >>= addEquipmentDecoration
+    let private simpleEquipment  = manyCharsExceptWordDelimiters >>= addEquipmentDecoration
+    let private complexEquipment = manyCharsTill (noneOf ['#']) (pstring "{}") >>= addEquipmentDecoration
     let equipment = skipChar '#' >>. ((attempt complexEquipment) <|> simpleEquipment)
 
     // Timer

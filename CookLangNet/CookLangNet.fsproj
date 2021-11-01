@@ -6,9 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="Properties.fs" />
+    <Compile Include="Utils.fs" />
     <Compile Include="Models.fs" />
     <Compile Include="Parser.fs" />
+    <Compile Include="Api.fs" />
   </ItemGroup>
 
   <ItemGroup>
