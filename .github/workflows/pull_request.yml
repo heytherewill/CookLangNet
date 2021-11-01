@@ -1,0 +1,37 @@
+name: Build & test
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    name: Health Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - name: Install linter
+        run: dotnet tool install -g dotnet-fsharplint
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Lint
+        run: dotnet fsharplint lint CookLangNet.sln
+      - name: Test
+        run: dotnet test --no-restore --logger "trx;LogFileName=test_results.trx"
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v2
+        with:
+          name: test_results
+          path: |
+            **/test_results.trx
