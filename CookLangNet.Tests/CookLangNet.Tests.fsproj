@@ -11,6 +11,7 @@
     <Compile Include="Generators.fs" />
     <Compile Include="ParserTests.fs" />
     <Compile Include="EdgeCaseTests.fs" />
+    <Compile Include="IntegrationTests.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
