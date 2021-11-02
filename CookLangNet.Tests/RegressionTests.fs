@@ -1,5 +1,7 @@
 ﻿module RegressionTests
 
+(* These test bugs in the code that were fixed to prevent they from sneaking back in. *)
+
 open CookLangNet
 open CookLangNet.Parser
 open Xunit

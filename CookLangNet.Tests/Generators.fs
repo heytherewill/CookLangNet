@@ -90,6 +90,7 @@ let toAmountOption shouldBeSome quantity shouldContainUnit unit =
 let toEquipment name = { Name = name }
 let toIngredient name amount = { Name = name; Amount = amount }
 let toTimer duration unit = { Duration = duration; Unit = unit }
+let stringFunc = Func<_,_>(string)
 
 type Default =
     static member SingleLineString () =
@@ -115,7 +116,7 @@ type Default =
     static member AmountOption () =
         let bool = Default.Bool().Generator
         let quantity = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
-        let unit = Default.SingleWordString().Generator.Select(fun x -> string x)
+        let unit = Default.SingleWordString().Generator.Select(stringFunc)
         Gen.map4 toAmountOption bool quantity bool unit |> Arb.fromGen
 
     static member MultiWordEquipment () =
@@ -127,24 +128,24 @@ type Default =
         |> convert (string >> toEquipment >> SingleWordEquipment) (string >> SingleWordString)
         
     static member MultiWordNoAmountIngredient () =
-        let name = Default.SingleLineString().Generator.Select(fun x -> string x)
+        let name = Default.SingleLineString().Generator.Select(stringFunc)
         Gen.map2 toIngredient name (Gen.constant None) |> Gen.map MultiWordNoAmountIngredient |> Arb.fromGen
         
     static member SingleWordNoAmountIngredient () =
-        let name = Default.SingleWordString().Generator.Select(fun x -> string x)
+        let name = Default.SingleWordString().Generator.Select(stringFunc)
         Gen.map2 toIngredient name (Gen.constant None) |> Gen.map SingleWordNoAmountIngredient |> Arb.fromGen
                 
     static member MultiWordWithAmountIngredient () =
-        let name = Default.SingleLineString().Generator.Select(fun x -> string x)
+        let name = Default.SingleLineString().Generator.Select(stringFunc)
         let amount = Default.AmountOption().Generator
         Gen.map2 toIngredient name amount |> Gen.map MultiWordWithAmountIngredient |> Arb.fromGen
         
     static member SingleWordWithAmountIngredient () =
-        let name = Default.SingleWordString().Generator.Select(fun x -> string x)
+        let name = Default.SingleWordString().Generator.Select(stringFunc)
         let amount = Default.AmountOption().Generator
         Gen.map2 toIngredient name amount |> Gen.map SingleWordWithAmountIngredient |> Arb.fromGen
         
     static member ValidTimer () =
         let duration = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
-        let unit = Default.SingleWordString().Generator.Select(fun x -> string x)
+        let unit = Default.SingleWordString().Generator.Select(stringFunc)
         Gen.map2 toTimer duration unit |> Gen.map ValidTimer |> Arb.fromGen

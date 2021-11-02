@@ -1,5 +1,7 @@
 module ParserTests
 
+(* These test the individual parsers to ensure they behave as expected. *)
+
 open CookLangNet.Parser
 open FParsec
 open FsCheck.Xunit
@@ -7,12 +9,14 @@ open FsUnit.Xunit
 open Generators
 open System
 
+/// Compares the outcome of a parser with an expected value.
 let internal testParser parser stringToParse (expectedValue: 'a) =
     let parserResult = runParserOnString parser State.Empty "Test" stringToParse 
     match parserResult with
     | Success(actualValue, _, _) -> (actualValue |> should equal expectedValue)
     | Failure _ -> failwith "Parser failed"
 
+/// Compares the outcome of a parser with an expected value.
 let internal testParserWithState (parser: Parser<'a, State>) stringToParse (expectedValue: 'a) (expectedState: State) =
     let parserResult = runParserOnString parser State.Empty "Test" stringToParse 
     match parserResult with
@@ -20,7 +24,6 @@ let internal testParserWithState (parser: Parser<'a, State>) stringToParse (expe
         actualValue |> should equal expectedValue
         actualState |> should equal expectedState
     | Failure _ -> failwith "Parser failed"
-
 
 module CommentParser =
     let internal testCommentParser stringToParse expectedValue = 

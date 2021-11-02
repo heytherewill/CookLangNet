@@ -1,5 +1,7 @@
 ﻿module IntegrationTests
 
+(* These test public API of the parser against actual recipes to verify it works in the real world. *)
+
 open CookLangNet
 open Xunit
 open FsUnit.Xunit
