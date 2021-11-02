@@ -1,4 +1,4 @@
-﻿module EdgeCaseTests
+﻿module RegressionTests
 
 open CookLangNet
 open CookLangNet.Parser
