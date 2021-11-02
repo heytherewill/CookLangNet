@@ -1,23 +1,20 @@
 module ParserTests
 
-open CookLangNet
 open CookLangNet.Parser
 open FParsec
 open FsCheck.Xunit
 open FsUnit.Xunit
 open Generators
 open System
-open FsCheck
-open System.Text.RegularExpressions
 
 let internal testParser parser stringToParse (expectedValue: 'a) =
-    let parserResult = runParserOnString parser [] "Test" stringToParse 
+    let parserResult = runParserOnString parser State.Empty "Test" stringToParse 
     match parserResult with
     | Success(actualValue, _, _) -> (actualValue |> should equal expectedValue)
     | Failure _ -> failwith "Parser failed"
 
-let internal testParserWithState (parser: Parser<'a, 'b>) stringToParse (expectedValue: 'a) initialState (expectedState: 'b) =
-    let parserResult = runParserOnString parser initialState "Test" stringToParse 
+let internal testParserWithState (parser: Parser<'a, State>) stringToParse (expectedValue: 'a) (expectedState: State) =
+    let parserResult = runParserOnString parser State.Empty "Test" stringToParse 
     match parserResult with
     | Success(actualValue, actualState, _) -> 
         actualValue |> should equal expectedValue
@@ -67,97 +64,85 @@ module StepParser =
     
     module Equipment =
         let internal testEquipmentParser stringToParse expectedValue expectedState =
-            testParserWithState equipment stringToParse expectedValue [] expectedState
+            testParserWithState equipment stringToParse expectedValue expectedState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word pieces of equipment delimited by space`` (equipment: SingleWordEquipment) =
             let stringToParse = equipment.Serialize() + " "
-            let parsedEquipment = ParsedEquipment equipment.Get
-            let expectedUserState = [ parsedEquipment ]
+            let expectedUserState = { State.Empty with ParsedEquipment = [ equipment.Get ] }
             testEquipmentParser stringToParse (equipment.ToString()) expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word pieces of equipment delimited by a comma``(equipment: SingleWordEquipment) =
-                   let stringToParse = equipment.Serialize() + ","
-                   let parsedEquipment = ParsedEquipment equipment.Get
-                   let expectedUserState = [ parsedEquipment ]
-                   testEquipmentParser stringToParse (equipment.ToString()) expectedUserState
+            let stringToParse = equipment.Serialize() + ","
+            let expectedUserState = { State.Empty with ParsedEquipment = [ equipment.Get ] }
+            testEquipmentParser stringToParse (equipment.ToString()) expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word pieces of equipment delimited by a period``(equipment: SingleWordEquipment) =
-                   let stringToParse = equipment.Serialize() + "."
-                   let parsedEquipment = ParsedEquipment equipment.Get
-                   let expectedUserState = [ parsedEquipment ]
-                   testEquipmentParser stringToParse (equipment.ToString()) expectedUserState
+            let stringToParse = equipment.Serialize() + "."
+            let expectedUserState = { State.Empty with ParsedEquipment = [ equipment.Get ] }
+            testEquipmentParser stringToParse (equipment.ToString()) expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses multi-word pieces of equipment`` (equipment: MultiWordEquipment) =
             let stringToParse = sprintf "#%s{}" (equipment.ToString())
-            let parsedEquipment = ParsedEquipment equipment.Get
-            let expectedUserState = [ parsedEquipment ]
+            let expectedUserState = { State.Empty with ParsedEquipment = [ equipment.Get ] }
             testEquipmentParser stringToParse (equipment.ToString()) expectedUserState
 
     module Ingredient =
         let internal testIngredientParser stringToParse expectedValue expectedState =
-            testParserWithState ingredient stringToParse expectedValue [] expectedState
+            testParserWithState ingredient stringToParse expectedValue expectedState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word ingredients delimited by space`` (ingredient: SingleWordNoAmountIngredient) =
             let stringToParse = ingredient.Serialize() + " "
             let expectedValue = ingredient.ToString()
-            let parsedIngredient = ParsedIngredient ingredient.Get
-            let expectedUserState = [ parsedIngredient ]
+            let expectedUserState = { State.Empty with ParsedIngredients = [ ingredient.Get ] }
             testIngredientParser stringToParse expectedValue expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word ingredients delimited by a comma`` (ingredient: SingleWordNoAmountIngredient) =
             let stringToParse = ingredient.Serialize() + ","
             let expectedValue = ingredient.ToString()
-            let parsedIngredient = ParsedIngredient ingredient.Get
-            let expectedUserState = [ parsedIngredient ]
+            let expectedUserState = { State.Empty with ParsedIngredients = [ ingredient.Get ] }
             testIngredientParser stringToParse expectedValue expectedUserState
-            
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word ingredients delimited by a period`` (ingredient: SingleWordNoAmountIngredient) =
             let stringToParse = ingredient.Serialize() + "."
             let expectedValue = ingredient.ToString()
-            let parsedIngredient = ParsedIngredient ingredient.Get
-            let expectedUserState = [ parsedIngredient ]
+            let expectedUserState = { State.Empty with ParsedIngredients = [ ingredient.Get ] }
             testIngredientParser stringToParse expectedValue expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses multi-word ingredients without specified amounts`` (ingredient: MultiWordNoAmountIngredient) =
             let stringToParse = ingredient.Serialize()
             let expectedValue = ingredient.ToString()
-            let parsedIngredient = ParsedIngredient ingredient.Get
-            let expectedUserState = [ parsedIngredient ]
+            let expectedUserState = { State.Empty with ParsedIngredients = [ ingredient.Get ] }
             testIngredientParser stringToParse expectedValue expectedUserState
             
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word ingredients with with arbitrary amounts`` (ingredient: SingleWordWithAmountIngredient)=
             let stringToParse = ingredient.Serialize()
             let expectedValue = ingredient.ToString()
-            let parsedIngredient = ParsedIngredient ingredient.Get
-            let expectedUserState = [ parsedIngredient ]
+            let expectedUserState = { State.Empty with ParsedIngredients = [ ingredient.Get ] }
             testIngredientParser stringToParse expectedValue expectedUserState
             
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses multi word ingredients with with arbitrary amounts`` (ingredient: MultiWordWithAmountIngredient) =
             let stringToParse = ingredient.Serialize()
             let expectedValue = ingredient.ToString()
-            let parsedIngredient = ParsedIngredient ingredient.Get
-            let expectedUserState = [ parsedIngredient ]
+            let expectedUserState = { State.Empty with ParsedIngredients = [ ingredient.Get ] }
             testIngredientParser stringToParse expectedValue expectedUserState
 
     module Timer =
         let internal testTimerParser stringToParse expectedValue expectedState =
-            testParserWithState timer stringToParse expectedValue [] expectedState
+            testParserWithState timer stringToParse expectedValue expectedState
             
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses timers with arbitrary amounts and units`` (timer: ValidTimer) =
             let stringToParse = timer.Serialize()
             let expectedValue = timer.ToString()
-            let parsedTimer = ParsedTimer timer.Get
-            let expectedUserState = [ parsedTimer ]
+            let expectedUserState = { State.Empty with ParsedTimers = [ timer.Get ] }
             testTimerParser stringToParse expectedValue expectedUserState

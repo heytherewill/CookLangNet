@@ -76,7 +76,14 @@ type Step = {
     Comment: string
 }
 
+/// A recipe.
 type Recipe = {
+    /// Steps needed to prepare the recipe.
     Steps: Step list
+    /// Additional metadata.
     Metadata: IDictionary<string, string>
 }
+
+/// Result of parsing a CookLang recipe.
+    /// The parsed recipe.
+    /// An exception containing details on what went wrong.
