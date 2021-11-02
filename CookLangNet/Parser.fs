@@ -92,7 +92,8 @@ module internal Parser =
             }
 
     let parseStepUntilDecoration = many1CharsExceptThese ['#'; '@'; '~' ; '/']
-    let parseDecoration = choice [ ingredient; equipment ; timer ; inlineComment ]
+    let parseDecorationChar = anyOf "#@~/" |>> string
+    let parseDecoration = choice [ ingredient; equipment ; timer ; inlineComment ; parseDecorationChar ]
 
     let stepDirections = (many (parseDecoration <|> parseStepUntilDecoration)) |>> String.concat ""
     let step = (stepDirections .>>. getUserState) |>> convertStateToStep >>= clearUserState

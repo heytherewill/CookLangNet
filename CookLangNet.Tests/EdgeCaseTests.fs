@@ -83,3 +83,44 @@ module Ingredients =
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
+        
+        
+    [<Fact>]
+    let ``Single slashes should not be parsed as inline comments`` () = 
+        let stringToParse = "This is a sample using a slash like this -> / to showcase that comments need two slashes and not one."
+        let expectedStep = Step {
+            Directions = "This is a sample using a slash like this -> / to showcase that comments need two slashes and not one."
+            NeededEquipment = []
+            Ingredients = []
+            Timers = []
+            Comment = ""
+        }
+
+        ParserTests.testParser Parser.step stringToParse expectedStep
+
+    [<Fact>]
+    let ``Single slashes should not be parsed as comments`` () = 
+        let stringToParse = "/ This is a sample using a slash to showcase that comments need two slashes and not one."
+        let expectedStep = Step {
+            Directions = "/ This is a sample using a slash to showcase that comments need two slashes and not one."
+            NeededEquipment = []
+            Ingredients = []
+            Timers = []
+            Comment = ""
+        }
+
+        ParserTests.testParser Parser.step stringToParse expectedStep
+        
+        
+    [<Fact>]
+    let ``Single angle bracers should not be parsed as metadata`` () = 
+        let stringToParse = "> This: is a sample using a single angle brace to showcase that metadata needs two and not one."
+        let expectedStep = Step {
+            Directions = "> This: is a sample using a single angle brace to showcase that metadata needs two and not one."
+            NeededEquipment = []
+            Ingredients = []
+            Timers = []
+            Comment = ""
+        }
+
+        ParserTests.testParser Parser.step stringToParse expectedStep
