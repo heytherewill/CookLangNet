@@ -5,14 +5,15 @@
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 
     <PackageId>CookLangNet</PackageId>
-    <PackageVersion>0.1.0</PackageVersion>
     <Authors>William Barbosa</Authors>
+    <PackageIcon>logo.png</PackageIcon>
     <Copyright>Copyright 2021</Copyright>
     <Description>Parser for CookLang.</Description>
     <PackageTags>cooklang;parser;fsharp</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/heytherewill/cooklangnet</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/heytherewill/cooklangnet/blob/main/LICENSE</PackageLicenseUrl>
+    <PackageIconUrl>https://raw.githubusercontent.com/heytherewill/cooklangnet/main/cooklangnet/logo.png</PackageIconUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -20,6 +21,7 @@
     <Compile Include="Models.fs" />
     <Compile Include="Parser.fs" />
     <Compile Include="Api.fs" />
+    <None Include="logo.png" Pack="true" PackagePath="\"/>
   </ItemGroup>
 
   <ItemGroup>
