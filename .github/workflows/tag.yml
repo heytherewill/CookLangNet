@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  build:
+
+    name: Health Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1
+        with:
+          dotnet-version: 5.0.x
+      - name: Install linter
+        run: dotnet tool install -g dotnet-fsharplint
+      - name: Install dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
+      - name: Lint
+        run: dotnet fsharplint lint CookLangNet.sln
+      - name: Test
+        run: dotnet test --no-restore --logger "trx;LogFileName=test_results.trx"
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: test_results
+          path: |
+            **/test_results.trx
+      - name: Extract version number
+        run: echo "RELEASE_VERSION=${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
+      - name: Pack binary
+        run: dotnet pack --configuration Release --no-restore -p:PackageVersion=${RELEASE_VERSION:1}
+      - name: Create a Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.RELEASE_VERSION }}
+          release_name: Release ${{ env.RELEASE_VERSION }}
+          draft: false
+          prerelease: ${{ contains(env.RELEASE_VERSION, '-') }}
+      - name: Push release to NuGet
+        run: dotnet nuget push **/*.nupkg --source https://api.nuget.org/v3/index.json -k ${{ secrets.NUGET_API_KEY }} --skip-duplicate
