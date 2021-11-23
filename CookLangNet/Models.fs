@@ -60,6 +60,8 @@ with
 
 /// A timer used in the recipe.
 type Timer = {
+    /// Name of the timer. This can be an empty string.
+    Name: string
     /// Duration of the timer.
     Duration: float
     /// Unit of time of this timer.
@@ -74,7 +76,9 @@ with
 
     /// Turns this object into its string representation in CookLang.
     member this.Serialize() =
-        StringBuilder("~{")
+        StringBuilder("~")
+            .Append(this.Name)
+            .Append("{")
             .Append(this.Duration.ToString())
             .Append("%")
             .Append(this.Unit)

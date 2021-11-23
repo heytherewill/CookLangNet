@@ -34,8 +34,10 @@ module internal Parser =
 
     /// Parses at least 1 of any character except for the ones contained in `chars`.
     let private many1CharsExceptThese chars = many1Chars (noneOf chars)
-    /// Parses at least 1 of any character except `char`.
+    /// Parses any character except `char`.
     let private manyCharsExcept char = manyChars (noneOf [ char ])
+    /// Parses any character except `char` and then parses `char`. Returns the parsed chars as a string, without `char` at the end.
+    let private manyCharsEndingWith char = manyChars (noneOf [ char ]) .>> pchar char
     /// Parses any number of characters until the CookLang delimiters for a single word are parsed.
     /// The delimiters are whitespace, line breaks, eof, comma and period.
     let private manyCharsExceptWordDelimiters = manyChars (noneOf [ ',' ; '.' ; '\n'; '\r'; ' ' ])
@@ -133,12 +135,12 @@ module internal Parser =
     (*==================================*)
     
     /// Adds a timer to the user state and returns its duration and unit as the parser's result.
-    let private addTimerDecoration (duration, unit) =
-        let timer = { Duration = duration; Unit = unit}
+    let private addTimerDecoration (name, (duration, unit)) =
+        let timer = { Name = name; Duration = duration; Unit = unit }
         addTimer timer >>% (duration.ToString() + " " + unit)
 
     /// Parses a timer and adds the timer object to the user state.
-    let timer = skipString "~{" >>. (pfloat .>>. (skipChar '%' >>. (manyCharsExcept '}'))) .>> skipChar '}' >>= addTimerDecoration
+    let timer = skipChar '~' >>. manyCharsTill anyButDecorationDelimiters (pchar '{') .>>. (pfloat .>>. (skipChar '%' >>. (manyCharsEndingWith '}'))) >>= addTimerDecoration
 
     (*==================================*)
     (*              Steps               *)

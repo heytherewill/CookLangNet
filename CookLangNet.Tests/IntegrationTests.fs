@@ -12,7 +12,7 @@ open System.Collections.Generic
 let tofuTikkaMasala = @"
 >> source: https://rainbowplantlife.com/tofu-tikka-masala/
 
-Prepare the @tofu. Use a #tofu press{}. Or, wrap the tofu in a clean dish towel or several layers of paper towels, weigh it down with a heavy cookbook or a large plate weighed down by a few cans of beans. Press the tofu for ~{30%minutes}. Tear the tofu into chunks with your hands and transfer the tofu chunks to a #large bowl{}. -- The tofu chunks shouldn’t be too large or too small (see photos for reference), but it’s totally fine if they’re not all the same size.
+Prepare the @tofu. Use a #tofu press{}. Or, wrap the tofu in a clean dish towel or several layers of paper towels, weigh it down with a heavy cookbook or a large plate weighed down by a few cans of beans. Press the tofu for ~pressing tofu{30%minutes}. Tear the tofu into chunks with your hands and transfer the tofu chunks to a #large bowl{}. -- The tofu chunks shouldn’t be too large or too small (see photos for reference), but it’s totally fine if they’re not all the same size.
 
 Make the tikka spice blend. Heat a small or medium #frying pan{} over medium heat. Once warm, add the whole spices (@cumin and @coriander seeds{}, @cloves, @peppercorns, @cardamom seeds{}, @cinnamon sticks{}, and @fenugreek leaves{}).
 
@@ -46,7 +46,7 @@ module ParseStringTests =
                 Directions = "Prepare the tofu. Use a tofu press. Or, wrap the tofu in a clean dish towel or several layers of paper towels, weigh it down with a heavy cookbook or a large plate weighed down by a few cans of beans. Press the tofu for 30 minutes. Tear the tofu into chunks with your hands and transfer the tofu chunks to a large bowl."
                 Ingredients = [ { Name = "tofu" ; Amount = None } ]
                 Equipment = [ { Name = "tofu press" } ; { Name = "large bowl" } ]
-                Timers = [ { Duration = (float 30); Unit = "minutes" } ]
+                Timers = [ { Name = "pressing tofu" ; Duration = (float 30); Unit = "minutes" } ]
                 Comment = "The tofu chunks shouldn’t be too large or too small (see photos for reference), but it’s totally fine if they’re not all the same size."
             }
             {
@@ -60,7 +60,7 @@ module ParseStringTests =
                 Directions = "Toast, shaking the pan frequently, until they are very fragrant and toasty, and the lighter seeds have browned, about 3 minutes. Transfer the seeds out of the pan and allow to cool."
                 Ingredients = []
                 Equipment = []
-                Timers = [ { Duration = 3.0 ; Unit = "minutes" } ]
+                Timers = [ { Name = "" ; Duration = 3.0 ; Unit = "minutes" } ]
                 Comment = "" 
             }
             {
@@ -81,7 +81,7 @@ module ParseStringTests =
                 Directions = "Cover and refrigerate for 2 hours, or up to 8 hours."
                 Ingredients = []
                 Equipment = []
-                Timers = [ { Duration = float 2; Unit = "hours" } ; { Duration = float 8; Unit = "hours" } ]
+                Timers = [ { Name = "" ; Duration = float 2; Unit = "hours" } ; { Name = "" ; Duration = float 8; Unit = "hours" } ]
                 Comment = ""
             }
             {
@@ -109,35 +109,35 @@ module ParseStringTests =
                 Directions = "Return the pan to the second oven rack and broil until the tofu is cooked through and charred in some spots on top, about 11 minutes."
                 Ingredients = []
                 Equipment = []
-                Timers = [ { Duration = float 11; Unit = "minutes" } ]
+                Timers = [ { Name = "" ; Duration = float 11; Unit = "minutes" } ]
                 Comment = "After the 5-minute mark, I recommend checking every 1-2 minutes to prevent burning since every oven is different."
             }
             {
                 Directions = "MAKE THE MASALA. Heat the 3 tablespoons of oil in a deep 12-inch sauté pan over medium-high heat. Once hot, add the cumin seeds and cook for 1 minute, swirling the pan frequently. Add the dried chilies and cook for another 30 seconds, swirling frequently to prevent burning."
                 Ingredients = [ { Name = "cumin seeds" ; Amount = None } ; { Name = "dried chilies" ; Amount = None } ]
                 Equipment = [ { Name = "12-inch sauté pan" } ]
-                Timers = [ { Duration = float 30 ; Unit = "seconds" } ]
+                Timers = [ { Name = "" ; Duration = float 30 ; Unit = "seconds" } ]
                 Comment = ""
             }
             {
                 Directions = "Add the onions with a couple pinches of salt and cook until golden brown, about 6 minutes (if the onions start browning too quickly, lower the heat to medium)."
                 Ingredients = [ { Name = "onions" ; Amount = None } ; { Name = "salt" ; Amount = None } ]
                 Equipment = []
-                Timers = [ { Duration = float 6 ; Unit = "minutes" } ]
+                Timers = [ { Name = "" ; Duration = float 6 ; Unit = "minutes" } ]
                 Comment = ""
             }
             {
                 Directions = "Add in a few splashes of water to stop the onions from browning too much, then add the garlic, ginger, diced serrano pepper, and turmeric, and cook for 1 minute, tossing frequently. Add the red chili powder, coriander, and tomato paste. Stir frequently for 30 to 60 seconds."
                 Ingredients = [  { Name = "garlic" ; Amount = None } ;  { Name = "ginger" ; Amount = None } ; { Name = "serrano pepper" ; Amount = None }  ;  { Name = "turmeric" ; Amount = None }  ;  { Name = "red chili powder" ; Amount = None }  ;  { Name = "coriander" ; Amount = None }  ;  { Name = "tomato paste" ; Amount = None } ]
                 Equipment = []
-                Timers = [ { Duration = (float 1) ; Unit = "minute" } ]
+                Timers = [ { Name = "" ; Duration = (float 1) ; Unit = "minute" } ]
                 Comment = ""
             }
             {
                 Directions = "Add the tomatoes and their juices, and cook until broken down and softened, 2.5 minutes."
                 Ingredients = [ { Name = "tomatoes" ; Amount = None } ]
                 Equipment = []
-                Timers = [ { Duration = float 2.5f; Unit = "minutes" } ]
+                Timers = [ { Name = "" ; Duration = float 2.5f; Unit = "minutes" } ]
                 Comment = ""
             }
             {

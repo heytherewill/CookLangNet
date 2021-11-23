@@ -40,7 +40,7 @@ module Ingredients =
             Directions = "These are some sample directions with added salt for 5 minutes."
             Equipment = []
             Ingredients = [ { Name = "salt" ; Amount = None } ]
-            Timers = [ { Duration = float 5 ; Unit = "minutes" } ]
+            Timers = [ { Name = "" ; Duration = float 5 ; Unit = "minutes" } ]
             Comment = ""
         }
 
@@ -80,7 +80,7 @@ module Equipment =
             Directions = "These are some sample directions using a spoon for 5 minutes."
             Equipment = [ { Name = "spoon" } ]
             Ingredients = []
-            Timers = [ { Duration = float 5 ; Unit = "minutes" } ]
+            Timers = [ { Name = "" ; Duration = float 5 ; Unit = "minutes" } ]
             Comment = ""
         }
 

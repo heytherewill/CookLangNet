@@ -76,7 +76,7 @@ let private transformIntoSingleLineString s =
                 builder.Append(linesRead) |> ignore
 
         /// Removes characters that would cause the individual 
-        // units not to be parsed as expected.
+        /// units not to be parsed as expected.
         Regex.Replace(builder.ToString(), @"({|}|#|@|,|\.|~)+", "")
 
 let private truth _ = true
@@ -89,7 +89,7 @@ let toAmountOption shouldBeSome quantity shouldContainUnit unit =
 
 let toEquipment name = { Name = name }
 let toIngredient name amount = { Name = name; Amount = amount }
-let toTimer duration unit = { Duration = duration; Unit = unit }
+let toTimer name duration unit = { Name = name; Duration = duration; Unit = unit }
 let stringFunc = Func<_,_>(string)
 
 type Default =
@@ -146,6 +146,7 @@ type Default =
         Gen.map2 toIngredient name amount |> Gen.map SingleWordWithAmountIngredient |> Arb.fromGen
         
     static member ValidTimer () =
+        let name = Default.SingleWordString().Generator.Select(stringFunc)
         let duration = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
         let unit = Default.SingleWordString().Generator.Select(stringFunc)
-        Gen.map2 toTimer duration unit |> Gen.map ValidTimer |> Arb.fromGen
+        Gen.map3 toTimer name duration unit |> Gen.map ValidTimer |> Arb.fromGen
