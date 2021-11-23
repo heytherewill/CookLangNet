@@ -61,8 +61,8 @@ module internal Parser =
     (*             Comments             *)
     (*==================================*)
 
-    /// Parses the comment delimiter `//` and then the rest of the line. The output is trimmed.
-    let private comment = skipString "//" >>. restOfLine true |>> trim
+    /// Parses the comment delimiter `--` and then the rest of the line. The output is trimmed.
+    let private comment = skipString "--" >>. restOfLine true |>> trim
     /// Parses an entire line as a comment.
     let commentLine = comment |>> ParsedLine.Comment
     /// Parses the rest of a line as a comment.
@@ -155,12 +155,12 @@ module internal Parser =
         }
 
     /// Parses many characters as part of the step's description until one of the decoration delimiters is found.
-    let private parseStepUntilDecoration = many1CharsExceptThese ['#'; '@'; '~' ; '/']
+    let private parseStepUntilDecoration = many1CharsExceptThese ['#'; '@'; '~' ; '-']
     /// Parses a single decoration char as a string.
     /// This is a fallback for when a decoration char is just part of the description and not part of a decoration.
-    let private parseDecorationChar = anyOf "#@~/" |>> string
-    // Parses any of the special elements in a description: ingredients, equipments, timers and comments.
-    // If the parser fails to parse any of those it will consume the first character and return it.
+    let private parseDecorationChar = anyOf "#@~-" |>> string
+    /// Parses any of the special elements in a description: ingredients, equipments, timers and comments.
+    /// If the parser fails to parse any of those it will consume the first character and return it.
     let private parseDecoration = choice [ ingredient; equipment ; timer ; inlineComment ; parseDecorationChar ]
     /// Parses the directions of the step by applying `parseDecoration` and `parseStepUntilDecoration` many times and concatenating the results.
     let private stepDirections = (many (parseDecoration <|> parseStepUntilDecoration)) |>> String.concat ""

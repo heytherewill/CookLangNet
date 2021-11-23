@@ -12,7 +12,7 @@ open System.Collections.Generic
 let tofuTikkaMasala = @"
 >> source: https://rainbowplantlife.com/tofu-tikka-masala/
 
-Prepare the @tofu. Use a #tofu press{}. Or, wrap the tofu in a clean dish towel or several layers of paper towels, weigh it down with a heavy cookbook or a large plate weighed down by a few cans of beans. Press the tofu for ~{30%minutes}. Tear the tofu into chunks with your hands and transfer the tofu chunks to a #large bowl{}. // The tofu chunks shouldn’t be too large or too small (see photos for reference), but it’s totally fine if they’re not all the same size.
+Prepare the @tofu. Use a #tofu press{}. Or, wrap the tofu in a clean dish towel or several layers of paper towels, weigh it down with a heavy cookbook or a large plate weighed down by a few cans of beans. Press the tofu for ~{30%minutes}. Tear the tofu into chunks with your hands and transfer the tofu chunks to a #large bowl{}. -- The tofu chunks shouldn’t be too large or too small (see photos for reference), but it’s totally fine if they’re not all the same size.
 
 Make the tikka spice blend. Heat a small or medium #frying pan{} over medium heat. Once warm, add the whole spices (@cumin and @coriander seeds{}, @cloves, @peppercorns, @cardamom seeds{}, @cinnamon sticks{}, and @fenugreek leaves{}).
 
@@ -24,7 +24,7 @@ Cover and refrigerate for ~{2%hours}, or up to ~{8%hours}.
 When ready to bake the tofu, arrange an #oven rack 6 inches from the heat source (usually, the second rack). Add a #12-inch cast iron skillet{} to the rack and preheat the oven to 500ºF/260ºC.
 Once the skillet is smoking hot, transfer it to the stove or a pot holder. Turn the #broiler to high.
 Add enough @oil to lightly coat the bottom of the pan. Add the marinated tofu to the pan, leaving excess marinade behind. It will be pretty tightly packed into the pan.
-Return the pan to the second oven rack and broil until the tofu is cooked through and charred in some spots on top, about ~{11%minutes}. // After the 5-minute mark, I recommend checking every 1-2 minutes to prevent burning since every oven is different.
+Return the pan to the second oven rack and broil until the tofu is cooked through and charred in some spots on top, about ~{11%minutes}. -- After the 5-minute mark, I recommend checking every 1-2 minutes to prevent burning since every oven is different.
 MAKE THE MASALA. Heat the 3 tablespoons of oil in a deep #12-inch sauté pan{} over medium-high heat. Once hot, add the @cumin seeds{} and cook for 1 minute, swirling the pan frequently. Add the @dried chilies{} and cook for another ~{30%seconds}, swirling frequently to prevent burning.
 Add the @onions with a couple pinches of @salt and cook until golden brown, about ~{6%minutes} (if the onions start browning too quickly, lower the heat to medium).
 Add in a few splashes of water to stop the onions from browning too much, then add the @garlic, @ginger, diced @serrano pepper{}, and @turmeric, and cook for ~{1%minute}, tossing frequently. Add the @red chili powder{}, @coriander, and @tomato paste{}. Stir frequently for 30 to 60 seconds.

@@ -32,14 +32,14 @@ module CommentParser =
     [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
     let ``The comment line parser reads an entire line as a comment`` (input: SingleLineString) =
         let comment = input.Get
-        let stringToParse = @"// " + comment
+        let stringToParse = @"-- " + comment
         let expectedValue = ParsedLine.Comment (comment.Trim())
         testCommentParser stringToParse expectedValue
         
     [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
     let ``The space after the comment delimiter is optional``(input: SingleLineString) =
         let comment = input.Get
-        let stringToParse = @"//" + comment
+        let stringToParse = @"--" + comment
         let expectedValue = ParsedLine.Comment (comment.Trim())
         testCommentParser stringToParse expectedValue
 

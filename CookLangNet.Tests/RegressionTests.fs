@@ -101,10 +101,10 @@ module Comments =
         ParserTests.testParser Parser.step stringToParse expectedStep
 
     [<Fact>]
-    let ``Single slashes should not be parsed as comments`` () = 
-        let stringToParse = "/ This is a sample using a slash to showcase that comments need two slashes and not one."
+    let ``Single dashes should not be parsed as comments`` () = 
+        let stringToParse = "- This is a sample using a slash to showcase that comments need two slashes and not one."
         let expectedStep = Step {
-            Directions = "/ This is a sample using a slash to showcase that comments need two slashes and not one."
+            Directions = "- This is a sample using a slash to showcase that comments need two slashes and not one."
             Equipment = []
             Ingredients = []
             Timers = []
