@@ -10,14 +10,14 @@ module internal Parser =
     /// User state that holds the decorations parsed in each step.
     type State = {
         ParsedIngredients: Ingredient list
-        ParsedEquipment: Equipment list
+        ParsedCookware: Cookware list
         ParsedTimers: Timer list
         ParsedComment: string option
     }
     with 
         static member Empty = { 
             ParsedIngredients = []
-            ParsedEquipment = []
+            ParsedCookware = []
             ParsedTimers = []
             ParsedComment = None
         }
@@ -52,8 +52,8 @@ module internal Parser =
     let private addComment c = updateUserState (fun s -> { s with ParsedComment = Some c })
     /// Adds a parsed ingredient to the user state.
     let private addIngredient i = updateUserState (fun s -> { s with ParsedIngredients = i::s.ParsedIngredients })
-    /// Adds a parsed equipment to the user state.
-    let private addEquipment e = updateUserState (fun s -> { s with ParsedEquipment = e::s.ParsedEquipment })
+    /// Adds a parsed cookware to the user state.
+    let private addCookware e = updateUserState (fun s -> { s with ParsedCookware = e::s.ParsedCookware })
     /// Adds a parsed timer to the user state.
     let private addTimer t = updateUserState (fun s -> { s with ParsedTimers = t::s.ParsedTimers })
     /// Resets the user state. This is meant to be called when one finishes parsing a line.
@@ -115,20 +115,26 @@ module internal Parser =
     let ingredient = skipChar '@' >>. ((attempt complexIngredient) <|> simpleIngredient)
     
     (*==================================*)
-    (*            Equipment             *)
+    (*            Cookware              *)
     (*==================================*)
+    
+    /// Adds a cookware to the user state and returns its name as the parser's result.
+    let private addComplexCookwareDecoration (name, quantity)  =
+        let cookware = { Name = name ; Quantity = quantity }
+        addCookware cookware >>% name
 
-    /// Adds an equipment to the user state and returns its name as the parser's result.
-    let private addEquipmentDecoration name =
-        let equipment = { Name = name }
-        addEquipment equipment >>% name
+    /// Adds a cookware to the user state and returns its name as the parser's result.
+    let private addSimpleCookwareDecoration name  =
+        addComplexCookwareDecoration (name, None)
 
-    /// Parses a single-word equipment.
-    let private simpleEquipment  = manyCharsExceptWordDelimiters >>= addEquipmentDecoration
-    /// Parses a multi-word equipment.
-    let private complexEquipment = manyCharsTill anyButDecorationDelimiters (pstring "{}") >>= addEquipmentDecoration
-    /// Parses an equipment's name and adds the equipment object to the user state.
-    let equipment = skipChar '#' >>. ((attempt complexEquipment) <|> simpleEquipment)
+    /// Parses a single-word cookware.
+    let private simpleCookware = manyCharsExceptWordDelimiters >>= addSimpleCookwareDecoration
+    /// Parses the name of a multi-word cookware or of a cookware that contains amounts.
+    let private complexCookwareName = manyCharsTill anyButDecorationDelimiters (pchar '{')
+    /// Parses a multi-word cookware or a cookware with quanitity.
+    let private complexCookware = (complexCookwareName .>>. (opt pfloat) .>> skipChar '}') >>= addComplexCookwareDecoration
+    /// Parses a cookware's name and adds the cookware object to the user state.
+    let cookware = skipChar '#' >>.  ((attempt complexCookware) <|> simpleCookware)
     
     (*==================================*)
     (*              Timer               *)
@@ -152,7 +158,7 @@ module internal Parser =
             Directions = directions |> trim
             Timers = state.ParsedTimers |> List.rev
             Ingredients = state.ParsedIngredients |> List.rev
-            Equipment = state.ParsedEquipment |> List.rev
+            Cookware = state.ParsedCookware |> List.rev
             Comment = state.ParsedComment |> Option.defaultValue "" 
         }
 
@@ -161,9 +167,9 @@ module internal Parser =
     /// Parses a single decoration char as a string.
     /// This is a fallback for when a decoration char is just part of the description and not part of a decoration.
     let private parseDecorationChar = anyOf "#@~-" |>> string
-    /// Parses any of the special elements in a description: ingredients, equipments, timers and comments.
+    /// Parses any of the special elements in a description: ingredients, cookware, timers and comments.
     /// If the parser fails to parse any of those it will consume the first character and return it.
-    let private parseDecoration = choice [ ingredient; equipment ; timer ; inlineComment ; parseDecorationChar ]
+    let private parseDecoration = choice [ ingredient; cookware ; timer ; inlineComment ; parseDecorationChar ]
     /// Parses the directions of the step by applying `parseDecoration` and `parseStepUntilDecoration` many times and concatenating the results.
     let private stepDirections = (many (parseDecoration <|> parseStepUntilDecoration)) |>> String.concat ""
     /// Parses a line as a step of the recipe.

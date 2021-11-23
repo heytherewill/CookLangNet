@@ -43,10 +43,12 @@ with
                     else "")
             .ToString()
             
-/// An equipment needed for a recipe.
-type Equipment = {
-    /// The name of the equipment.
+/// An piece of cookware needed for a recipe.
+type Cookware = {
+    /// The name of the cookware.
     Name: string
+    /// The quantity of the cookware needed for the recipe.
+    Quantity: float option
 }
 with
     override this.ToString() = this.Name
@@ -55,7 +57,10 @@ with
     member this.Serialize() =
         StringBuilder("#")
             .Append(this.Name.ToString())
-            .Append(if this.Name.Contains(" ") then "{}" else "")
+            .Append(
+                match this.Quantity with
+                | Some quantity -> "{" + quantity.ToString() + "}"
+                | None -> if this.Name.Contains(" ") then "{}" else "")
             .ToString()
 
 /// A timer used in the recipe.
@@ -93,8 +98,8 @@ type Step = {
     Timers: Timer list
     /// Ingredients used in this step.
     Ingredients: Ingredient list
-    /// Equipment used in this step.
-    Equipment: Equipment list
+    /// Cookware used in this step.
+    Cookware: Cookware list
     /// Any additional comments for this step.
     Comment: string
 }

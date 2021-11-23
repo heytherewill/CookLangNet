@@ -25,13 +25,13 @@ type NormalPositiveFloat = NormalPositiveFloat of float with
     member x.Get = match x with NormalPositiveFloat f -> f
     override x.ToString() = x.Get.ToString()
 
-type SingleWordEquipment = SingleWordEquipment of Equipment with
-    member x.Get = match x with SingleWordEquipment e -> e
+type SingleWordCookware = SingleWordCookware of Cookware with
+    member x.Get = match x with SingleWordCookware e -> e
     member x.Serialize() = x.Get.Serialize()
     override x.ToString() = x.Get.ToString()
 
-type MultiWordEquipment = MultiWordEquipment of Equipment with
-    member x.Get = match x with MultiWordEquipment e -> e
+type MultiWordCookware = MultiWordCookware of Cookware with
+    member x.Get = match x with MultiWordCookware e -> e
     member x.Serialize() = x.Get.Serialize()
     override x.ToString() = x.Get.ToString()
     
@@ -87,7 +87,7 @@ let toAmountOption shouldBeSome quantity shouldContainUnit unit =
     let unit = if shouldContainUnit then Some unit else None
     if shouldBeSome then Some { Quantity = quantity; Unit = unit } else None
 
-let toEquipment name = { Name = name }
+let toCookware includeQuantity name quantity = { Name = name; Quantity = if includeQuantity then Some quantity else None }
 let toIngredient name amount = { Name = name; Amount = amount }
 let toTimer name duration unit = { Name = name; Duration = duration; Unit = unit }
 let stringFunc = Func<_,_>(string)
@@ -119,13 +119,17 @@ type Default =
         let unit = Default.SingleWordString().Generator.Select(stringFunc)
         Gen.map4 toAmountOption bool quantity bool unit |> Arb.fromGen
 
-    static member MultiWordEquipment () =
-        Default.SingleLineString()
-        |> convert (string >> toEquipment >> MultiWordEquipment) (string >> SingleLineString)
+    static member MultiWordCookware () =
+        let bool = Default.Bool().Generator
+        let name = Default.SingleLineString().Generator.Select(stringFunc)
+        let quantity = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
+        Gen.map3 toCookware bool name quantity |> Gen.map MultiWordCookware |> Arb.fromGen
 
-    static member SingleWordEquipment () =
-        Default.SingleWordString()
-        |> convert (string >> toEquipment >> SingleWordEquipment) (string >> SingleWordString)
+    static member SingleWordCookware () =
+        let bool = Default.Bool().Generator
+        let name = Default.SingleWordString().Generator.Select(stringFunc)
+        let quantity = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
+        Gen.map3 toCookware bool name quantity |> Gen.map SingleWordCookware |> Arb.fromGen
         
     static member MultiWordNoAmountIngredient () =
         let name = Default.SingleLineString().Generator.Select(stringFunc)
