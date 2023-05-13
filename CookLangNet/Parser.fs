@@ -114,12 +114,12 @@ module internal Parser =
     let private simpleIngredient        = manyCharsExceptWordDelimiters >>= addSimpleIngredientDecoration
     /// Parses the name of a multi-word ingredient or of an ingredient that contains amounts.
     let private complexIngredientName   = manyCharsTill anyButDecorationDelimiters (pchar '{')
-    /// Parses quantities expressed as fractions.
-    let private fractionQuantity = attempt ((pfloat .>>. (pchar '/' >>. pfloat)) |>> fractionToNumber)
-    /// Parses quantities expressed as floating point numbers or integers.
-    let private numericQuantity = attempt (pfloat .>> manyTill (anyOf [ ' ' ]) (pchar '}'))
     /// Parses a quantity.
-    let private ingredientQuantity = choice [ fractionQuantity; numericQuantity ]
+    let private ingredientQuantity =
+        let label = "Ingredient Quantity" 
+        let numberFormat = NumberLiteralOptions.AllowFraction ||| NumberLiteralOptions.DefaultFloat
+        numberLiteral numberFormat label |>> (fun numberLiteral -> float numberLiteral.String)
+
     /// Parses the units of an ingredient amount.
     let private ingredientUnit = skipChar '%' >>. (manyCharsExcept '}')
     /// Parses the amount for an ingredient.

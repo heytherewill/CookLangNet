@@ -170,7 +170,7 @@ module ParseStringTests =
             }
             {
                 Directions = "Add the baked tofu, the thinly sliced serrano pepper (if using for spicy spicy!), and lemon juice. Simmer for 2 minutes and coat the tofu in the sauce. Taste, and if it’s a bit too acidic, add a tiny bit of sugar."
-                Ingredients = [ { Name = "lemon juice" ; Amount = None } ; { Name = "sugar" ; Amount = Some { Quantity = "0.5" ; Unit = Some "teaspoon" } } ]
+                Ingredients = [ { Name = "lemon juice" ; Amount = None } ; { Name = "sugar" ; Amount = Some { Quantity = 0.5 ; Unit = Some "teaspoon" } } ]
                 Cookware = []
                 Timers = []
                 //Comment = ""

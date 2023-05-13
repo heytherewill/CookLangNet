@@ -5,20 +5,18 @@
 module CanonicalTests
 
 open CookLangNet
-open FsUnit.Xunit
 open System.IO
 open System.Collections.Generic
 open Xunit
 open YamlDotNet.Serialization
 open YamlDotNet.Serialization.NamingConventions
-open System.Collections
+open System
 
 type CanonicalTestIngredient = { Name: string; quantity: int; units: string }
 
 type Step = 
 | Ingredient of CanonicalTestIngredient
 | Text of string
-
 
 // NOTE: These can't be made into records because YamlDotNet 
 // requires an empty constructor.
@@ -77,14 +75,22 @@ let canonicalTestData () =
                         directions <- directions + (itemDictionary["value"].ToString())
                     | "ingredient" ->
                         let name = itemDictionary["name"].ToString()
-                        let quantity = itemDictionary["quantity"].ToString()
+                        let quantity = 
+                            let quantityString = itemDictionary["quantity"].ToString()
+                            if quantityString = "some" then None
+                            else if quantityString.Contains("/") then
+                                let parts = quantityString.Split("/")
+                                Some ((Double.Parse parts.[0]) / (Double.Parse parts.[1]))
+                            else
+                                Some (Double.Parse quantityString) 
                         let units = itemDictionary["units"].ToString()
                         let parsedIngredient = {
                             Name = name
                             Amount = 
-                                if quantity = "some" then None
-                                else Some {
-                                    Quantity = quantity |> System.Double.Parse
+                                match quantity with
+                                | None -> None
+                                | Some quantity -> Some {
+                                    Quantity = quantity ;
                                     Unit = 
                                         if units = "" then None
                                         else Some units
@@ -105,12 +111,12 @@ let canonicalTestData () =
                         timers <- parsedTimer::timers
                     | "cookware" -> 
                         let name = itemDictionary["name"].ToString()
-                        let quantity = itemDictionary["quantity"].ToString()
+                        let quantity = itemDictionary["quantity"].ToString() |> Double.Parse
                         let parsedCookware = {
                             Name = itemDictionary["name"].ToString()
                             Quantity = 
-                                if quantity = "1" then None
-                                else Some quantity
+                                if quantity = 1.0 then None
+                                else Some quantity 
                         }
                         directions <- directions + name
                         cookware <- parsedCookware::cookware
