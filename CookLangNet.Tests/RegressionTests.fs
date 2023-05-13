@@ -15,7 +15,7 @@ module Ingredients =
             Cookware = []
             Ingredients = [ { Name = "salt" ; Amount = None } ; { Name = "black pepper" ; Amount = None } ]
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -28,7 +28,7 @@ module Ingredients =
             Cookware = [ { Name = "salt shaker"; Quantity = None } ]
             Ingredients = [ { Name = "salt" ; Amount = None } ]
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -41,7 +41,7 @@ module Ingredients =
             Cookware = []
             Ingredients = [ { Name = "salt" ; Amount = None } ]
             Timers = [ { Name = "" ; Duration = float 5 ; Unit = "minutes" } ]
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -55,7 +55,7 @@ module Cookware =
             Cookware = [ { Name = "spatula"; Quantity = None } ; { Name = "12-inch skillet"; Quantity = None } ]
             Ingredients = []
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -68,7 +68,7 @@ module Cookware =
             Cookware = [ { Name = "spoon"; Quantity = None } ]
             Ingredients = [ { Name = "fenugreek leaves" ; Amount = None } ]
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -81,7 +81,7 @@ module Cookware =
             Cookware = [ { Name = "spoon"; Quantity = None } ]
             Ingredients = []
             Timers = [ { Name = "" ; Duration = float 5 ; Unit = "minutes" } ]
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -95,7 +95,7 @@ module Comments =
             Cookware = []
             Ingredients = []
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -108,7 +108,7 @@ module Comments =
             Cookware = []
             Ingredients = []
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -122,7 +122,7 @@ module Metadata =
             Cookware = []
             Ingredients = []
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep

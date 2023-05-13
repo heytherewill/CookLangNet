@@ -12,14 +12,12 @@ module internal Parser =
         ParsedIngredients: Ingredient list
         ParsedCookware: Cookware list
         ParsedTimers: Timer list
-        ParsedComment: string option
     }
     with 
         static member Empty = { 
             ParsedIngredients = []
             ParsedCookware = []
             ParsedTimers = []
-            ParsedComment = None
         }
 
     /// Holds the data parsed for each line.
@@ -36,6 +34,8 @@ module internal Parser =
     let private many1CharsExceptThese chars = many1Chars (noneOf chars)
     /// Parses any character except `char`.
     let private manyCharsExcept char = manyChars (noneOf [ char ])
+    /// Parses at least character except `char`.
+    let private many1CharsExcept char = many1Chars (noneOf [ char ])
     /// Parses any character except `char` and then parses `char`. Returns the parsed chars as a string, without `char` at the end.
     let private manyCharsEndingWith char = manyChars (noneOf [ char ]) .>> pchar char
     /// Parses any number of characters until the CookLang delimiters for a single word are parsed.
@@ -47,9 +47,7 @@ module internal Parser =
     (*==================================*)
     (*      User State manipulation     *)
     (*==================================*)
-    
-    /// Adds the parsed comment to the user state.
-    let private addComment c = updateUserState (fun s -> { s with ParsedComment = Some c })
+
     /// Adds a parsed ingredient to the user state.
     let private addIngredient i = updateUserState (fun s -> { s with ParsedIngredients = i::s.ParsedIngredients })
     /// Adds a parsed cookware to the user state.
@@ -68,7 +66,7 @@ module internal Parser =
     /// Parses an entire line as a comment.
     let commentLine = comment |>> ParsedLine.Comment
     /// Parses the rest of a line as a comment.
-    let inlineComment = comment >>= addComment >>% ""
+    let inlineComment = comment >>% ""
     
     (*==================================*)
     (*             Metadata             *)
@@ -91,24 +89,41 @@ module internal Parser =
     (*==================================*)
 
     /// Constructs an IngredientAmount object from a tuple.
-    let private toIngredientAmount (quantity, unit) = 
-        { Quantity = quantity; Unit = unit }
+    let private toIngredientAmount (quantity, unit) =
+        { 
+            Quantity = quantity;
+            Unit = 
+                match unit with
+                | None -> None
+                | Some unit -> Some (trim unit)
+        }
 
     /// Adds an ingredient to the user state and returns its name as the parser's result.
     let private addComplexIngredientDecoration (name, amount) =
-        let ingredient = { Name = name; Amount = amount }
+        let ingredient = { Name = name ; Amount = amount }
         addIngredient ingredient >>% name
     
     /// Adds an ingredient to the user state and returns its name as the parser's result.
     let private addSimpleIngredientDecoration name =
         addComplexIngredientDecoration (name, None)
 
+    /// Turns a fraction of a number into the string representation of a float.
+    let fractionToNumber (numerator, denominator) = numerator / denominator
+
     /// Parses a single-word ingredient with no amounts.
     let private simpleIngredient        = manyCharsExceptWordDelimiters >>= addSimpleIngredientDecoration
     /// Parses the name of a multi-word ingredient or of an ingredient that contains amounts.
     let private complexIngredientName   = manyCharsTill anyButDecorationDelimiters (pchar '{')
+    /// Parses quantities expressed as fractions.
+    let private fractionQuantity = attempt ((pfloat .>>. (pchar '/' >>. pfloat)) |>> fractionToNumber)
+    /// Parses quantities expressed as floating point numbers or integers.
+    let private numericQuantity = attempt (pfloat .>> manyTill (anyOf [ ' ' ]) (pchar '}'))
+    /// Parses a quantity.
+    let private ingredientQuantity = choice [ fractionQuantity; numericQuantity ]
+    /// Parses the units of an ingredient amount.
+    let private ingredientUnit = skipChar '%' >>. (manyCharsExcept '}')
     /// Parses the amount for an ingredient.
-    let private complexIngredientAmount = pfloat .>>. (opt (skipChar '%' >>. (manyCharsExcept '}'))) |>> toIngredientAmount
+    let private complexIngredientAmount = ingredientQuantity .>>. (opt ingredientUnit) |>> toIngredientAmount
     /// Parses a multi-word ingredient or an ingredient that contains amounts.    
     let private complexIngredient = (complexIngredientName .>>. (opt complexIngredientAmount) .>> skipChar '}') >>= addComplexIngredientDecoration
     /// Parses an ingredient's name and adds the ingredient object to the user state.
@@ -117,7 +132,7 @@ module internal Parser =
     (*==================================*)
     (*            Cookware              *)
     (*==================================*)
-    
+
     /// Adds a cookware to the user state and returns its name as the parser's result.
     let private addComplexCookwareDecoration (name, quantity)  =
         let cookware = { Name = name ; Quantity = quantity }
@@ -126,6 +141,11 @@ module internal Parser =
     /// Adds a cookware to the user state and returns its name as the parser's result.
     let private addSimpleCookwareDecoration name  =
         addComplexCookwareDecoration (name, None)
+
+    /// Interprets a string as a cookware quantity. We need this function to filter empty string cookware quantities.
+    let private asCookwareQuantity quantity =
+        if isNullOrWhiteSpace quantity then None
+        else Some quantity
 
     /// Parses a single-word cookware.
     let private simpleCookware = manyCharsExceptWordDelimiters >>= addSimpleCookwareDecoration
@@ -145,8 +165,17 @@ module internal Parser =
         let timer = { Name = name; Duration = duration; Unit = unit }
         addTimer timer >>% (duration.ToString() + " " + unit)
 
+    /// Parses a timer duration, which can be written as a floating point number or a fraction.
+    let parseTimerDuration = 
+        let interpretAsDuration (numerator, optionalDenominator) =
+            match optionalDenominator with
+            | None -> numerator
+            | Some denominator -> numerator / denominator
+
+        pfloat .>>. (opt ((pchar '/') >>. pfloat)) |>> interpretAsDuration
+
     /// Parses a timer and adds the timer object to the user state.
-    let timer = skipChar '~' >>. manyCharsTill anyButDecorationDelimiters (pchar '{') .>>. (pfloat .>>. (skipChar '%' >>. (manyCharsEndingWith '}'))) >>= addTimerDecoration
+    let timer = skipChar '~' >>. manyCharsTill anyButDecorationDelimiters (pchar '{') .>>. (parseTimerDuration .>>. (skipChar '%' >>. (manyCharsEndingWith '}'))) >>= addTimerDecoration
 
     (*==================================*)
     (*              Steps               *)
@@ -159,7 +188,6 @@ module internal Parser =
             Timers = state.ParsedTimers |> List.rev
             Ingredients = state.ParsedIngredients |> List.rev
             Cookware = state.ParsedCookware |> List.rev
-            Comment = state.ParsedComment |> Option.defaultValue "" 
         }
 
     /// Parses many characters as part of the step's description until one of the decoration delimiters is found.

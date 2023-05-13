@@ -1,14 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net6.0</TargetFramework>
 
     <IsPackable>false</IsPackable>
     <GenerateProgramFile>false</GenerateProgramFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="Assertions.fs" />
     <Compile Include="Generators.fs" />
+    <Compile Include="CanonicalTests.fs" />
     <Compile Include="ParserTests.fs" />
     <Compile Include="RegressionTests.fs" />
     <Compile Include="IntegrationTests.fs" />
@@ -17,6 +19,7 @@
 
   <ItemGroup>
     <PackageReference Include="FsCheck.Xunit" Version="2.16.3" />
+    <PackageReference Include="FSharp.Configuration" Version="2.0.0" />
     <PackageReference Include="FsUnit.xUnit" Version="4.0.7" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.7.1" />
     <PackageReference Include="xunit" Version="2.4.1" />
@@ -28,6 +31,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="YamlDotNet" Version="11.2.1" />
   </ItemGroup>
 
   <ItemGroup>

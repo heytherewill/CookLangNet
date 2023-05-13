@@ -2,7 +2,6 @@
 
 open FsCheck.Arb
 open CookLangNet
-open CookLangNet.Parser
 open System.IO
 open System.Text
 open System.Text.RegularExpressions
@@ -77,7 +76,7 @@ let private transformIntoSingleLineString s =
 
         /// Removes characters that would cause the individual 
         /// units not to be parsed as expected.
-        Regex.Replace(builder.ToString(), @"({|}|#|@|,|\.|~)+", "")
+        Regex.Replace(builder.ToString(), @"({|}|#|@|,|\.|~|%)+", "")
 
 let private truth _ = true
 let private removeSpaces (s: string) = Regex.Replace(s, @"\s+", "");
@@ -115,20 +114,20 @@ type Default =
 
     static member AmountOption () =
         let bool = Default.Bool().Generator
-        let quantity = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
+        let quantity = Default.SingleWordString().Generator.Select(fun x -> x.Get)
         let unit = Default.SingleWordString().Generator.Select(stringFunc)
         Gen.map4 toAmountOption bool quantity bool unit |> Arb.fromGen
 
     static member MultiWordCookware () =
         let bool = Default.Bool().Generator
         let name = Default.SingleLineString().Generator.Select(stringFunc)
-        let quantity = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
+        let quantity = Default.SingleWordString().Generator.Select(fun x -> x.Get)
         Gen.map3 toCookware bool name quantity |> Gen.map MultiWordCookware |> Arb.fromGen
 
     static member SingleWordCookware () =
         let bool = Default.Bool().Generator
         let name = Default.SingleWordString().Generator.Select(stringFunc)
-        let quantity = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
+        let quantity = Default.SingleWordString().Generator.Select(fun x -> x.Get)
         Gen.map3 toCookware bool name quantity |> Gen.map SingleWordCookware |> Arb.fromGen
         
     static member MultiWordNoAmountIngredient () =

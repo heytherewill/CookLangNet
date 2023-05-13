@@ -100,8 +100,6 @@ type Step = {
     Ingredients: Ingredient list
     /// Cookware used in this step.
     Cookware: Cookware list
-    /// Any additional comments for this step.
-    Comment: string
 }
 
 /// A recipe.
