@@ -114,20 +114,20 @@ type Default =
 
     static member AmountOption () =
         let bool = Default.Bool().Generator
-        let quantity = Default.SingleWordString().Generator.Select(fun x -> x.Get)
+        let quantity = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
         let unit = Default.SingleWordString().Generator.Select(stringFunc)
         Gen.map4 toAmountOption bool quantity bool unit |> Arb.fromGen
 
     static member MultiWordCookware () =
         let bool = Default.Bool().Generator
         let name = Default.SingleLineString().Generator.Select(stringFunc)
-        let quantity = Default.SingleWordString().Generator.Select(fun x -> x.Get)
+        let quantity = Default.SingleLineString().Generator.Select(fun x -> x.Get)
         Gen.map3 toCookware bool name quantity |> Gen.map MultiWordCookware |> Arb.fromGen
 
     static member SingleWordCookware () =
         let bool = Default.Bool().Generator
         let name = Default.SingleWordString().Generator.Select(stringFunc)
-        let quantity = Default.SingleWordString().Generator.Select(fun x -> x.Get)
+        let quantity = Default.SingleLineString().Generator.Select(fun x -> x.Get)
         Gen.map3 toCookware bool name quantity |> Gen.map SingleWordCookware |> Arb.fromGen
         
     static member MultiWordNoAmountIngredient () =

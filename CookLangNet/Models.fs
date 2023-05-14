@@ -6,10 +6,14 @@ open System.Collections.Generic
 /// Type alias for the unit of measurement of ingredients.
 type UnitOfMeasurement = string
 
+type Quantity =
+    | Numeric of float
+    | Textual of string
+
 /// The amount of a given ingredient to use for a recipe.
 type IngredientAmount = {
     /// Quantity of the ingredient.
-    Quantity: float
+    Quantity: Quantity
     /// Optional unit of measurement.
     Unit: UnitOfMeasurement option
 } 
@@ -48,7 +52,7 @@ type Cookware = {
     /// The name of the cookware.
     Name: string
     /// The quantity of the cookware needed for the recipe.
-    Quantity: float option
+    Quantity: Quantity option
 }
 with
     override this.ToString() = this.Name

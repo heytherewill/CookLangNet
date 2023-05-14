@@ -111,11 +111,11 @@ let canonicalTestData () =
                         timers <- parsedTimer::timers
                     | "cookware" -> 
                         let name = itemDictionary["name"].ToString()
-                        let quantity = itemDictionary["quantity"].ToString() |> Double.Parse
+                        let quantity = itemDictionary["quantity"].ToString()
                         let parsedCookware = {
                             Name = itemDictionary["name"].ToString()
                             Quantity = 
-                                if quantity = 1.0 then None
+                                if quantity = "1" then None
                                 else Some quantity 
                         }
                         directions <- directions + name

@@ -133,26 +133,26 @@ module internal Parser =
     (*            Cookware              *)
     (*==================================*)
 
-    /// Adds a cookware to the user state and returns its name as the parser's result.
-    let private addComplexCookwareDecoration (name, quantity)  =
-        let cookware = { Name = name ; Quantity = quantity }
-        addCookware cookware >>% name
-
-    /// Adds a cookware to the user state and returns its name as the parser's result.
-    let private addSimpleCookwareDecoration name  =
-        addComplexCookwareDecoration (name, None)
-
     /// Interprets a string as a cookware quantity. We need this function to filter empty string cookware quantities.
     let private asCookwareQuantity quantity =
         if isNullOrWhiteSpace quantity then None
         else Some quantity
+
+    /// Adds a cookware to the user state and returns its name as the parser's result.
+    let private addComplexCookwareDecoration (name, quantity)  =
+        let cookware = { Name = name ; Quantity = quantity |> asCookwareQuantity }
+        addCookware cookware >>% name
+
+    /// Adds a cookware to the user state and returns its name as the parser's result.
+    let private addSimpleCookwareDecoration name  =
+        addComplexCookwareDecoration (name, "")
 
     /// Parses a single-word cookware.
     let private simpleCookware = manyCharsExceptWordDelimiters >>= addSimpleCookwareDecoration
     /// Parses the name of a multi-word cookware or of a cookware that contains amounts.
     let private complexCookwareName = manyCharsTill anyButDecorationDelimiters (pchar '{')
     /// Parses a multi-word cookware or a cookware with quanitity.
-    let private complexCookware = (complexCookwareName .>>. (opt pfloat) .>> skipChar '}') >>= addComplexCookwareDecoration
+    let private complexCookware = (complexCookwareName .>>. (manyCharsTill anyChar (pchar '}'))) >>= addComplexCookwareDecoration
     /// Parses a cookware's name and adds the cookware object to the user state.
     let cookware = skipChar '#' >>.  ((attempt complexCookware) <|> simpleCookware)
     
