@@ -15,7 +15,7 @@ module Ingredients =
             Cookware = []
             Ingredients = [ { Name = "salt" ; Amount = None } ; { Name = "black pepper" ; Amount = None } ]
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -25,10 +25,10 @@ module Ingredients =
         let stringToParse = "These are some sample directions with added @salt via a #salt shaker{}."
         let expectedStep = Step {
             Directions = "These are some sample directions with added salt via a salt shaker."
-            Cookware = [ { Name = "salt shaker"; Quantity = None } ]
+            Cookware = [ { Name = "salt shaker"; Quantity = Numeric 1 } ]
             Ingredients = [ { Name = "salt" ; Amount = None } ]
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -41,7 +41,7 @@ module Ingredients =
             Cookware = []
             Ingredients = [ { Name = "salt" ; Amount = None } ]
             Timers = [ { Name = "" ; Duration = float 5 ; Unit = "minutes" } ]
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -52,10 +52,10 @@ module Cookware =
         let stringToParse = "These are some sample directions that require a #spatula and a #12-inch skillet{}."
         let expectedStep = Step {
             Directions = "These are some sample directions that require a spatula and a 12-inch skillet."
-            Cookware = [ { Name = "spatula"; Quantity = None } ; { Name = "12-inch skillet"; Quantity = None } ]
+            Cookware = [ { Name = "spatula"; Quantity = Numeric 1 } ; { Name = "12-inch skillet"; Quantity = Numeric 1 } ]
             Ingredients = []
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -65,10 +65,10 @@ module Cookware =
         let stringToParse = "These are some sample directions using a #spoon to add @fenugreek leaves{}."
         let expectedStep = Step {
             Directions = "These are some sample directions using a spoon to add fenugreek leaves."
-            Cookware = [ { Name = "spoon"; Quantity = None } ]
+            Cookware = [ { Name = "spoon"; Quantity = Numeric 1 } ]
             Ingredients = [ { Name = "fenugreek leaves" ; Amount = None } ]
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -78,10 +78,10 @@ module Cookware =
         let stringToParse = "These are some sample directions using a #spoon for ~{5%minutes}."
         let expectedStep = Step {
             Directions = "These are some sample directions using a spoon for 5 minutes."
-            Cookware = [ { Name = "spoon"; Quantity = None } ]
+            Cookware = [ { Name = "spoon"; Quantity = Numeric 1 } ]
             Ingredients = []
             Timers = [ { Name = "" ; Duration = float 5 ; Unit = "minutes" } ]
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -95,7 +95,7 @@ module Comments =
             Cookware = []
             Ingredients = []
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -108,7 +108,7 @@ module Comments =
             Cookware = []
             Ingredients = []
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep
@@ -122,7 +122,7 @@ module Metadata =
             Cookware = []
             Ingredients = []
             Timers = []
-            Comment = ""
+            //Comment = ""
         }
 
         ParserTests.testParser Parser.step stringToParse expectedStep

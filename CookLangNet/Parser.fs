@@ -12,14 +12,12 @@ module internal Parser =
         ParsedIngredients: Ingredient list
         ParsedCookware: Cookware list
         ParsedTimers: Timer list
-        ParsedComment: string option
     }
     with 
         static member Empty = { 
             ParsedIngredients = []
             ParsedCookware = []
             ParsedTimers = []
-            ParsedComment = None
         }
 
     /// Holds the data parsed for each line.
@@ -31,11 +29,15 @@ module internal Parser =
     (*==================================*)
     (*          Helper parsers          *)
     (*==================================*)
-
+    
+    /// Parses at any character except for the ones contained in `chars`.
+    let private manyCharsExceptThese chars = manyChars (noneOf chars)
     /// Parses at least 1 of any character except for the ones contained in `chars`.
     let private many1CharsExceptThese chars = many1Chars (noneOf chars)
     /// Parses any character except `char`.
     let private manyCharsExcept char = manyChars (noneOf [ char ])
+    /// Parses at least 1 character except `char`.
+    let private many1CharsExcept char = many1Chars (noneOf [ char ])
     /// Parses any character except `char` and then parses `char`. Returns the parsed chars as a string, without `char` at the end.
     let private manyCharsEndingWith char = manyChars (noneOf [ char ]) .>> pchar char
     /// Parses any number of characters until the CookLang delimiters for a single word are parsed.
@@ -47,9 +49,7 @@ module internal Parser =
     (*==================================*)
     (*      User State manipulation     *)
     (*==================================*)
-    
-    /// Adds the parsed comment to the user state.
-    let private addComment c = updateUserState (fun s -> { s with ParsedComment = Some c })
+
     /// Adds a parsed ingredient to the user state.
     let private addIngredient i = updateUserState (fun s -> { s with ParsedIngredients = i::s.ParsedIngredients })
     /// Adds a parsed cookware to the user state.
@@ -68,7 +68,7 @@ module internal Parser =
     /// Parses an entire line as a comment.
     let commentLine = comment |>> ParsedLine.Comment
     /// Parses the rest of a line as a comment.
-    let inlineComment = comment >>= addComment >>% ""
+    let inlineComment = comment >>% ""
     
     (*==================================*)
     (*             Metadata             *)
@@ -91,48 +91,66 @@ module internal Parser =
     (*==================================*)
 
     /// Constructs an IngredientAmount object from a tuple.
-    let private toIngredientAmount (quantity, unit) = 
-        { Quantity = quantity; Unit = unit }
+    let private toIngredientAmount (quantity, unit) =
+        if isNullOrWhiteSpace quantity then None
+        else Some {
+            Quantity = quantityFromString quantity
+            Unit = 
+                match unit with
+                | None -> None
+                | Some unit -> Some (trim unit)
+        }
 
     /// Adds an ingredient to the user state and returns its name as the parser's result.
     let private addComplexIngredientDecoration (name, amount) =
-        let ingredient = { Name = name; Amount = amount }
+        let ingredient = { Name = name ; Amount = amount }
         addIngredient ingredient >>% name
     
     /// Adds an ingredient to the user state and returns its name as the parser's result.
     let private addSimpleIngredientDecoration name =
         addComplexIngredientDecoration (name, None)
 
+    /// Turns a fraction of a number into the string representation of a float.
+    let fractionToNumber (numerator, denominator) = numerator / denominator
+
     /// Parses a single-word ingredient with no amounts.
     let private simpleIngredient        = manyCharsExceptWordDelimiters >>= addSimpleIngredientDecoration
     /// Parses the name of a multi-word ingredient or of an ingredient that contains amounts.
     let private complexIngredientName   = manyCharsTill anyButDecorationDelimiters (pchar '{')
+
+    /// Parses the units of an ingredient amount.
+    let private ingredientUnit = (attempt (skipChar '%' >>. manyCharsEndingWith '}' |>> Some)) <|> (skipChar '}' |>> (fun _ -> None))
     /// Parses the amount for an ingredient.
-    let private complexIngredientAmount = pfloat .>>. (opt (skipChar '%' >>. (manyCharsExcept '}'))) |>> toIngredientAmount
+    let private complexIngredientAmount = (manyCharsExceptThese ['#'; '@'; '~' ; '}' ; '%']) .>>. ingredientUnit |>> toIngredientAmount
     /// Parses a multi-word ingredient or an ingredient that contains amounts.    
-    let private complexIngredient = (complexIngredientName .>>. (opt complexIngredientAmount) .>> skipChar '}') >>= addComplexIngredientDecoration
+    let private complexIngredient = (complexIngredientName .>>. complexIngredientAmount) >>= addComplexIngredientDecoration
     /// Parses an ingredient's name and adds the ingredient object to the user state.
     let ingredient = skipChar '@' >>. ((attempt complexIngredient) <|> simpleIngredient)
     
     (*==================================*)
     (*            Cookware              *)
     (*==================================*)
-    
+
+    /// Interprets a string as a cookware quantity. We need this function to filter empty string cookware quantities.
+    let private asCookwareQuantity quantity =
+        if isNullOrWhiteSpace quantity then Numeric 1
+        else quantityFromString quantity
+
     /// Adds a cookware to the user state and returns its name as the parser's result.
     let private addComplexCookwareDecoration (name, quantity)  =
-        let cookware = { Name = name ; Quantity = quantity }
+        let cookware = { Name = name ; Quantity = quantity |> asCookwareQuantity }
         addCookware cookware >>% name
 
     /// Adds a cookware to the user state and returns its name as the parser's result.
     let private addSimpleCookwareDecoration name  =
-        addComplexCookwareDecoration (name, None)
+        addComplexCookwareDecoration (name, "")
 
     /// Parses a single-word cookware.
     let private simpleCookware = manyCharsExceptWordDelimiters >>= addSimpleCookwareDecoration
     /// Parses the name of a multi-word cookware or of a cookware that contains amounts.
     let private complexCookwareName = manyCharsTill anyButDecorationDelimiters (pchar '{')
     /// Parses a multi-word cookware or a cookware with quanitity.
-    let private complexCookware = (complexCookwareName .>>. (opt pfloat) .>> skipChar '}') >>= addComplexCookwareDecoration
+    let private complexCookware = (complexCookwareName .>>. (manyCharsTill anyChar (pchar '}'))) >>= addComplexCookwareDecoration
     /// Parses a cookware's name and adds the cookware object to the user state.
     let cookware = skipChar '#' >>.  ((attempt complexCookware) <|> simpleCookware)
     
@@ -145,8 +163,17 @@ module internal Parser =
         let timer = { Name = name; Duration = duration; Unit = unit }
         addTimer timer >>% (duration.ToString() + " " + unit)
 
+    /// Parses a timer duration, which can be written as a floating point number or a fraction.
+    let parseTimerDuration = 
+        let interpretAsDuration (numerator, optionalDenominator) =
+            match optionalDenominator with
+            | None -> numerator
+            | Some denominator -> numerator / denominator
+
+        pfloat .>>. (opt ((pchar '/') >>. pfloat)) |>> interpretAsDuration
+
     /// Parses a timer and adds the timer object to the user state.
-    let timer = skipChar '~' >>. manyCharsTill anyButDecorationDelimiters (pchar '{') .>>. (pfloat .>>. (skipChar '%' >>. (manyCharsEndingWith '}'))) >>= addTimerDecoration
+    let timer = skipChar '~' >>. manyCharsTill anyButDecorationDelimiters (pchar '{') .>>. (parseTimerDuration .>>. (skipChar '%' >>. (manyCharsEndingWith '}'))) >>= addTimerDecoration
 
     (*==================================*)
     (*              Steps               *)
@@ -159,7 +186,6 @@ module internal Parser =
             Timers = state.ParsedTimers |> List.rev
             Ingredients = state.ParsedIngredients |> List.rev
             Cookware = state.ParsedCookware |> List.rev
-            Comment = state.ParsedComment |> Option.defaultValue "" 
         }
 
     /// Parses many characters as part of the step's description until one of the decoration delimiters is found.

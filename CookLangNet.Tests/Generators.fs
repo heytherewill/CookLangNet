@@ -2,7 +2,6 @@
 
 open FsCheck.Arb
 open CookLangNet
-open CookLangNet.Parser
 open System.IO
 open System.Text
 open System.Text.RegularExpressions
@@ -77,7 +76,7 @@ let private transformIntoSingleLineString s =
 
         /// Removes characters that would cause the individual 
         /// units not to be parsed as expected.
-        Regex.Replace(builder.ToString(), @"({|}|#|@|,|\.|~)+", "")
+        Regex.Replace(builder.ToString(), @"({|}|#|@|,|\.|~|%)+", "")
 
 let private truth _ = true
 let private removeSpaces (s: string) = Regex.Replace(s, @"\s+", "");
@@ -87,12 +86,13 @@ let toAmountOption shouldBeSome quantity shouldContainUnit unit =
     let unit = if shouldContainUnit then Some unit else None
     if shouldBeSome then Some { Quantity = quantity; Unit = unit } else None
 
-let toCookware includeQuantity name quantity = { Name = name; Quantity = if includeQuantity then Some quantity else None }
+let toCookware includeQuantity name quantity = { Name = name; Quantity = if includeQuantity then quantity else Numeric 1 }
 let toIngredient name amount = { Name = name; Amount = amount }
 let toTimer name duration unit = { Name = name; Duration = duration; Unit = unit }
 let stringFunc = Func<_,_>(string)
 
 type Default =
+
     static member SingleLineString () =
         Default.String() 
         |> mapFilter transformIntoSingleLineString filterEmptyStrings
@@ -113,22 +113,39 @@ type Default =
         |> mapFilter (float >> abs >> NormalFloat) truth
         |> convert (float >> NormalPositiveFloat) (string >> float >> NormalFloat)
 
+    static member TextualQuantity () =
+        Default.TrimmedSingleLineString()
+        |> convert (fun x -> if Double.TryParse(x.Get, ref 0.0) then Numeric (Double.Parse(x.Get)) else Textual x.Get) (fun x -> x.Serialize() |> TrimmedSingleLineString)
+
+    static member NumericQuantity () =
+        Default.NormalPositiveFloat() 
+        |> convert (fun x -> Numeric x.Get) (fun x -> match x with Numeric f -> NormalPositiveFloat f | _ -> failwith "")
+
+    static member Quantity () =
+        let toQuantity useNumeric textual numeric =
+            if useNumeric then numeric else textual
+
+        let bool = Default.Bool().Generator
+        let textual = Default.TextualQuantity().Generator
+        let numeric = Default.NumericQuantity().Generator
+        Gen.map3 toQuantity bool textual numeric |> Arb.fromGen
+
     static member AmountOption () =
         let bool = Default.Bool().Generator
-        let quantity = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
+        let quantity = Default.Quantity().Generator
         let unit = Default.SingleWordString().Generator.Select(stringFunc)
         Gen.map4 toAmountOption bool quantity bool unit |> Arb.fromGen
 
     static member MultiWordCookware () =
         let bool = Default.Bool().Generator
+        let quantity = Default.Quantity().Generator
         let name = Default.SingleLineString().Generator.Select(stringFunc)
-        let quantity = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
         Gen.map3 toCookware bool name quantity |> Gen.map MultiWordCookware |> Arb.fromGen
 
     static member SingleWordCookware () =
         let bool = Default.Bool().Generator
+        let quantity = Default.Quantity().Generator
         let name = Default.SingleWordString().Generator.Select(stringFunc)
-        let quantity = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
         Gen.map3 toCookware bool name quantity |> Gen.map SingleWordCookware |> Arb.fromGen
         
     static member MultiWordNoAmountIngredient () =

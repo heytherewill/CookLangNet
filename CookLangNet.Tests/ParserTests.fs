@@ -65,33 +65,33 @@ module MetadataParser =
 
 module StepParser =
     
-    module Equipment =
-        let internal testEquipmentParser stringToParse expectedValue expectedState =
+    module Cookware =
+        let internal testCookwareParser stringToParse expectedValue expectedState =
             testParserWithState cookware stringToParse expectedValue expectedState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word pieces of cookware delimited by space`` (cookware: SingleWordCookware) =
             let stringToParse = cookware.Serialize() + " "
             let expectedUserState = { State.Empty with ParsedCookware = [ cookware.Get ] }
-            testEquipmentParser stringToParse (cookware.ToString()) expectedUserState
+            testCookwareParser stringToParse (cookware.ToString()) expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word pieces of cookware delimited by a comma``(cookware: SingleWordCookware) =
             let stringToParse = cookware.Serialize() + ","
             let expectedUserState = { State.Empty with ParsedCookware = [ cookware.Get ] }
-            testEquipmentParser stringToParse (cookware.ToString()) expectedUserState
+            testCookwareParser stringToParse (cookware.ToString()) expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses single word pieces of cookware delimited by a period``(cookware: SingleWordCookware) =
             let stringToParse = cookware.Serialize() + "."
             let expectedUserState = { State.Empty with ParsedCookware = [ cookware.Get ] }
-            testEquipmentParser stringToParse (cookware.ToString()) expectedUserState
+            testCookwareParser stringToParse (cookware.ToString()) expectedUserState
 
         [<Property(Arbitrary = [|typeof<Generators.Default>|])>]
         let ``Parses multi-word pieces of cookware`` (cookware: MultiWordCookware) =
             let stringToParse = cookware.Serialize()
             let expectedUserState = { State.Empty with ParsedCookware = [ cookware.Get ] }
-            testEquipmentParser stringToParse (cookware.ToString()) expectedUserState
+            testCookwareParser stringToParse (cookware.ToString()) expectedUserState
 
     module Ingredient =
         let internal testIngredientParser stringToParse expectedValue expectedState =

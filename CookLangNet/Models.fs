@@ -6,17 +6,27 @@ open System.Collections.Generic
 /// Type alias for the unit of measurement of ingredients.
 type UnitOfMeasurement = string
 
+type Quantity =
+    | Numeric of float
+    | Textual of string
+with
+    /// Turns this object into its string representation in CookLang.
+    member this.Serialize() =
+        match this with
+        | Textual s -> s
+        | Numeric n -> n.ToString()
+
 /// The amount of a given ingredient to use for a recipe.
 type IngredientAmount = {
     /// Quantity of the ingredient.
-    Quantity: float
+    Quantity: Quantity
     /// Optional unit of measurement.
     Unit: UnitOfMeasurement option
 } 
 with
     /// Turns this object into its string representation in CookLang.
     member this.Serialize() =
-        let builder = StringBuilder("{").Append(this.Quantity.ToString())
+        let builder = StringBuilder("{").Append(this.Quantity.Serialize())
         (match this.Unit with
         | Some unit -> builder.Append("%").Append(unit)
         | None -> builder).Append("}").ToString()
@@ -48,7 +58,7 @@ type Cookware = {
     /// The name of the cookware.
     Name: string
     /// The quantity of the cookware needed for the recipe.
-    Quantity: float option
+    Quantity: Quantity
 }
 with
     override this.ToString() = this.Name
@@ -59,8 +69,8 @@ with
             .Append(this.Name.ToString())
             .Append(
                 match this.Quantity with
-                | Some quantity -> "{" + quantity.ToString() + "}"
-                | None -> if this.Name.Contains(" ") then "{}" else "")
+                | Textual _ -> "{" + this.Quantity.Serialize() + "}"
+                | Numeric n -> "{" + (if n = 1.0 then "" else this.Quantity.Serialize() ) + "}")
             .ToString()
 
 /// A timer used in the recipe.
@@ -100,8 +110,6 @@ type Step = {
     Ingredients: Ingredient list
     /// Cookware used in this step.
     Cookware: Cookware list
-    /// Any additional comments for this step.
-    Comment: string
 }
 
 /// A recipe.
