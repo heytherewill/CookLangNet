@@ -8,7 +8,7 @@ module CookLangParser =
     
     /// Parses a string into a `Recipe` object.
     let ParseString stringToParse =    
-        use reader = new StringReader(stringToParse)
+        use reader = StringReader(stringToParse)
         let mutable parsedLines = []
         let mutable lineToParse = reader.ReadLine()
         let mutable err: string = null

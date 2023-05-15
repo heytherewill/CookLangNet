@@ -10,13 +10,6 @@ open System.Collections.Generic
 open Xunit
 open YamlDotNet.Serialization
 open YamlDotNet.Serialization.NamingConventions
-open System
-
-type CanonicalTestIngredient = { Name: string; quantity: int; units: string }
-
-type Step = 
-| Ingredient of CanonicalTestIngredient
-| Text of string
 
 // NOTE: These can't be made into records because YamlDotNet 
 // requires an empty constructor.

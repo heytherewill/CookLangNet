@@ -63,7 +63,7 @@ let private transformIntoSingleLineString s =
     if isNull s then 
         ""
     else 
-        use reader = new StringReader(s)
+        use reader = StringReader(s)
         let builder = StringBuilder()
 
         let mutable shouldContinue = true
@@ -119,7 +119,7 @@ type Default =
 
     static member NumericQuantity () =
         Default.NormalPositiveFloat() 
-        |> convert (fun x -> Numeric x.Get) (fun x -> match x with Numeric f -> NormalPositiveFloat f | _ -> failwith "")
+        |> convert (fun x -> Numeric x.Get) (fun x -> match x with Numeric f -> NormalPositiveFloat f | _ -> failwith "Textual Quantity wrongly used as Numeric")
 
     static member Quantity () =
         let toQuantity useNumeric textual numeric =

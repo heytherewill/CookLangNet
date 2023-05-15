@@ -10,20 +10,20 @@ open Generators
 open System
 
 /// Compares the outcome of a parser with an expected value.
-let internal testParser parser stringToParse (expectedValue: 'a) =
+let internal testParser parser stringToParse (expectedValue: 'Value) =
     let parserResult = runParserOnString parser State.Empty "Test" stringToParse 
     match parserResult with
     | Success(actualValue, _, _) -> (actualValue |> should equal expectedValue)
-    | Failure _ -> failwith "Parser failed"
+    | Failure (f, _, _) -> failwith (sprintf "Fail to parse string %s" f)
 
 /// Compares the outcome of a parser with an expected value.
-let internal testParserWithState (parser: Parser<'a, State>) stringToParse (expectedValue: 'a) (expectedState: State) =
+let internal testParserWithState (parser: Parser<'Value, State>) stringToParse (expectedValue: 'Value) (expectedState: State) =
     let parserResult = runParserOnString parser State.Empty "Test" stringToParse 
     match parserResult with
     | Success(actualValue, actualState, _) -> 
         actualValue |> should equal expectedValue
         actualState |> should equal expectedState
-    | Failure _ -> failwith "Parser failed"
+    | Failure (f, _, _) -> failwith (sprintf "Fail to parse string %s" f)
 
 module CommentParser =
     let internal testCommentParser stringToParse expectedValue = 
