@@ -12,12 +12,12 @@ Currently there's only one public API method, so consuming this library is as si
 This project has CI health checks that run whenever you PR against the main branch. In order to ensure your contributions will behave correctly on CI, run the tests and the linter locally.
 Start by installing the linter tool, if you haven't:
 ```
-dotnet tool install -g dotnet-fsharplint
+dotnet tool install -g fantomas
 ```
 Then to run the tests and the linter:
 ```
 dotnet test
-dotnet fsharplint lint .\CookLangNet.sln
+dotnet fantomas ./CookLangNet/ ./CookLangNet.Tests/
 ```
 
 ## Credits

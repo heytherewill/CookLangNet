@@ -9,7 +9,7 @@ type UnitOfMeasurement = string
 type Quantity =
     | Numeric of float
     | Textual of string
-with
+
     /// Turns this object into its string representation in CookLang.
     member this.Serialize() =
         match this with
@@ -17,30 +17,35 @@ with
         | Numeric n -> n.ToString()
 
 /// The amount of a given ingredient to use for a recipe.
-type IngredientAmount = {
-    /// Quantity of the ingredient.
-    Quantity: Quantity
-    /// Optional unit of measurement.
-    Unit: UnitOfMeasurement option
-} 
-with
+type IngredientAmount =
+    {
+        /// Quantity of the ingredient.
+        Quantity: Quantity
+        /// Optional unit of measurement.
+        Unit: UnitOfMeasurement option
+    }
+
     /// Turns this object into its string representation in CookLang.
     member this.Serialize() =
         let builder = StringBuilder("{").Append(this.Quantity.Serialize())
+
         (match this.Unit with
-        | Some unit -> builder.Append("%").Append(unit)
-        | None -> builder).Append("}").ToString()
+         | Some unit -> builder.Append("%").Append(unit)
+         | None -> builder)
+            .Append("}")
+            .ToString()
 
 /// An ingredient used in a recipe.
-type Ingredient = {
-    /// The name of the ingredient.
-    Name: string
-    /// Optional amount of the ingredient to be used in the recipe.
-    Amount: IngredientAmount option
-}
-with
+type Ingredient =
+    {
+        /// The name of the ingredient.
+        Name: string
+        /// Optional amount of the ingredient to be used in the recipe.
+        Amount: IngredientAmount option
+    }
+
     override this.ToString() = this.Name
-    
+
     /// Turns this object into its string representation in CookLang.
     member this.Serialize() =
         StringBuilder("@")
@@ -48,21 +53,21 @@ with
             .Append(
                 match this.Amount with
                 | Some amount -> amount.Serialize()
-                | None -> 
-                    if this.Name.Contains(" ") then "{}"
-                    else "")
+                | None -> if this.Name.Contains(" ") then "{}" else ""
+            )
             .ToString()
-            
+
 /// An piece of cookware needed for a recipe.
-type Cookware = {
-    /// The name of the cookware.
-    Name: string
-    /// The quantity of the cookware needed for the recipe.
-    Quantity: Quantity
-}
-with
+type Cookware =
+    {
+        /// The name of the cookware.
+        Name: string
+        /// The quantity of the cookware needed for the recipe.
+        Quantity: Quantity
+    }
+
     override this.ToString() = this.Name
-    
+
     /// Turns this object into its string representation in CookLang.
     member this.Serialize() =
         StringBuilder("#")
@@ -70,24 +75,23 @@ with
             .Append(
                 match this.Quantity with
                 | Textual _ -> "{" + this.Quantity.Serialize() + "}"
-                | Numeric n -> "{" + (if n = 1.0 then "" else this.Quantity.Serialize() ) + "}")
+                | Numeric n -> "{" + (if n = 1.0 then "" else this.Quantity.Serialize()) + "}"
+            )
             .ToString()
 
 /// A timer used in the recipe.
-type Timer = {
-    /// Name of the timer. This can be an empty string.
-    Name: string
-    /// Duration of the timer.
-    Duration: float
-    /// Unit of time of this timer.
-    Unit: string
-}
-with
-    override this.ToString() = 
-        StringBuilder(this.Duration.ToString())
-            .Append(" ")
-            .Append(this.Unit)
-            .ToString()
+type Timer =
+    {
+        /// Name of the timer. This can be an empty string.
+        Name: string
+        /// Duration of the timer.
+        Duration: float
+        /// Unit of time of this timer.
+        Unit: string
+    }
+
+    override this.ToString() =
+        StringBuilder(this.Duration.ToString()).Append(" ").Append(this.Unit).ToString()
 
     /// Turns this object into its string representation in CookLang.
     member this.Serialize() =
@@ -100,25 +104,27 @@ with
             .Append("}")
             .ToString()
 
-/// A step in the preparation of a recipe.            
-type Step = {
-    /// Directions of this step.
-    Directions: string
-    /// Timers used in this step.
-    Timers: Timer list
-    /// Ingredients used in this step.
-    Ingredients: Ingredient list
-    /// Cookware used in this step.
-    Cookware: Cookware list
-}
+/// A step in the preparation of a recipe.
+type Step =
+    {
+        /// Directions of this step.
+        Directions: string
+        /// Timers used in this step.
+        Timers: Timer list
+        /// Ingredients used in this step.
+        Ingredients: Ingredient list
+        /// Cookware used in this step.
+        Cookware: Cookware list
+    }
 
 /// A recipe.
-type Recipe = {
-    /// Steps needed to prepare the recipe.
-    Steps: Step list
-    /// Additional metadata.
-    Metadata: IDictionary<string, string>
-}
+type Recipe =
+    {
+        /// Steps needed to prepare the recipe.
+        Steps: Step list
+        /// Additional metadata.
+        Metadata: IDictionary<string, string>
+    }
 
 /// Result of parsing a CookLang recipe.
 type CookLangParserResult =

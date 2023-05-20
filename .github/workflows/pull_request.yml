@@ -22,13 +22,13 @@ jobs:
         with:
           dotnet-version: 7.0.x
       - name: Install linter
-        run: dotnet tool install -g dotnet-fsharplint
+        run: dotnet tool install -g fantomas
       - name: Install dependencies
         run: dotnet restore
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Lint
-        run: dotnet fsharplint lint CookLangNet.sln
+        run: fantomas ./CookLangNet/ ./CookLangNet.Tests/ --check
       - name: Test
         run: dotnet test --no-restore --logger "trx;LogFileName=test_results.trx"
       - name: Upload Test Results
