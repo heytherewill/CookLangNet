@@ -144,6 +144,6 @@ let canonicalTestData () =
 [<Theory>]
 [<MemberData("canonicalTestData")>]
 let ``The canonical suite of tests passes`` canonicalTest =
-    match CookLangParser.ParseString canonicalTest.Source with
+    match CookLangParser.parse canonicalTest.Source with
     | Failure errorMessage -> TestFailedDueTo.parsing canonicalTest errorMessage        
     | Success recipe -> recipe |> shouldBeTheSameRecipeAs canonicalTest.ExpectedRecipe

@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net7.0;netstandard2.0</TargetFrameworks>
+	<PackageId>CookLangNet.CSharp</PackageId>
+	<Authors>William Barbosa</Authors>
+	<PackageIcon>logo.png</PackageIcon>
+	<Copyright>Copyright 2023</Copyright>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<Description>Parser for CookLang with a C# friendly API.</Description>
+	<PackageTags>cooklang;parser;fsharp</PackageTags>
+	<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+	<PackageProjectUrl>https://github.com/heytherewill/cooklangnet</PackageProjectUrl>
+	<PackageLicenseUrl>https://github.com/heytherewill/cooklangnet/blob/main/LICENSE</PackageLicenseUrl>
+	<PackageIconUrl>https://raw.githubusercontent.com/heytherewill/cooklangnet/main/cooklangnet/logo.png</PackageIconUrl>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Api.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CookLangNet\CookLangNet.fsproj" />
+  </ItemGroup>
+
+</Project>

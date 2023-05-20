@@ -167,6 +167,6 @@ module ParseStringTests =
 
     [<Fact>]
     let ``Parsing a full recipe via the public API works`` () =
-        match CookLangParser.ParseString tofuTikkaMasala with
+        match CookLangParser.parse tofuTikkaMasala with
         | Success parsedRecipe -> parsedRecipe |> shouldBeTheSameRecipeAs tikkaMasalaRecipe
         | Failure err -> failwith err

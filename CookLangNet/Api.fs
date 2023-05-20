@@ -4,11 +4,13 @@ open FParsec
 open Parser
 open System.IO
 
-module CookLangParser =
-    
-    /// Parses a string into a `Recipe` object.
-    let ParseString stringToParse =    
-        use reader = StringReader(stringToParse)
+module CookLangParser =    
+    ///<summary>Parses the passed string into a Recipe.</summary>
+    ///<param name="stringToParse">The input string.</param>
+    ///<returns>The parsed recipe.</returns>
+    ///<exception cref="CookLangNet.CSharp.CookLangParserException">Thrown when the input is an invalid Recipe.</exception>
+    let parse string =    
+        use reader = StringReader(string)
         let mutable parsedLines = []
         let mutable lineToParse = reader.ReadLine()
         let mutable err: string = null

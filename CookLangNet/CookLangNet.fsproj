@@ -2,13 +2,12 @@
 
   <PropertyGroup>
     <TargetFrameworks>net7.0;netstandard2.0</TargetFrameworks>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-
     <PackageId>CookLangNet</PackageId>
     <Authors>William Barbosa</Authors>
     <PackageIcon>logo.png</PackageIcon>
     <Copyright>Copyright 2021</Copyright>
-    <Description>Parser for CookLang.</Description>
+	<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	<Description>Parser for CookLang.</Description>
     <PackageTags>cooklang;parser;fsharp</PackageTags>
     <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
     <PackageProjectUrl>https://github.com/heytherewill/cooklangnet</PackageProjectUrl>
