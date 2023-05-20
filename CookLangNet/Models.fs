@@ -57,7 +57,7 @@ type Ingredient =
             )
             .ToString()
 
-/// An piece of cookware needed for a recipe.
+/// A piece of cookware needed for a recipe.
 type Cookware =
     {
         /// The name of the cookware.

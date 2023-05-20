@@ -7,8 +7,7 @@ on:
 
 jobs:
   build:
-
-    name: Health Checks
+    name: Release
     runs-on: ubuntu-latest
 
     steps:
@@ -27,7 +26,7 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Lint
-        run: dotnet fantomas ./CookLangNet/ ./CookLangNet.Tests/ --check
+        run: dotnet fantomas ./CookLangNet/ ./CookLangNet.CSharp/ ./CookLangNet.Tests/ --check
       - name: Test
         run: dotnet test --no-restore --logger "trx;LogFileName=test_results.trx"
       - name: Upload Test Results

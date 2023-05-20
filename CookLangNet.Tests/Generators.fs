@@ -119,6 +119,7 @@ let private transformIntoSingleLineString s =
         ""
     else
         use reader = new StringReader(s)
+        use reader = StringReader(s)
         let builder = StringBuilder()
 
         let mutable shouldContinue = true
@@ -130,6 +131,8 @@ let private transformIntoSingleLineString s =
             if not <| isNull linesRead then
                 builder.Append(linesRead) |> ignore
 
+        /// Removes characters that would cause the individual
+        /// units not to be parsed as expected.
         Regex.Replace(builder.ToString(), @"({|}|#|@|,|\.|~|%)+", "")
 
 let private truth _ = true
@@ -271,5 +274,4 @@ type Default =
         let duration = Default.NormalPositiveFloat().Generator.Select(fun x -> x.Get)
 
         let unit = Default.SingleWordString().Generator.Select(stringFunc)
-
         Gen.map3 toTimer name duration unit |> Gen.map ValidTimer |> Arb.fromGen

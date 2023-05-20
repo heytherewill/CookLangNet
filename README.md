@@ -5,8 +5,15 @@ CookLangNet is simple and ergonomic parser for the [CookLang](https://cooklang.o
 ```terminal
 dotnet add package CookLangNet
 ```
+
+The main package relies heavily on F# types. If you are using C# and want a friendlier API, use the `CookLang.CSharp` package instead:
+
+```terminal
+dotnet add package CookLangNet.CSharp
+```
+
 ## Usage
-Currently there's only one public API method, so consuming this library is as simple as calling `CookLangNet.ParseString` on the string representation of the recipe you want parsed.
+Currently there's only one public API method, so consuming this library is as simple as calling `CookLangParser.parse` (or `CookLangParser.Parse` if using the C# package) on the string representation of the recipe you want parsed.
 
 ## Contributing
 This project has CI health checks that run whenever you PR against the main branch. In order to ensure your contributions will behave correctly on CI, run the tests and the linter locally.
@@ -17,7 +24,7 @@ dotnet tool install -g fantomas
 Then to run the tests and the linter:
 ```
 dotnet test
-dotnet fantomas ./CookLangNet/ ./CookLangNet.Tests/
+fantomas ./CookLangNet/ ./CookLangNet.CSharp/ ./CookLangNet.Tests/
 ```
 
 ## Credits
