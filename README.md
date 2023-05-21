@@ -13,7 +13,26 @@ dotnet add package CookLangNet.CSharp
 ```
 
 ## Usage
-Currently there's only one public API method, so consuming this library is as simple as calling `CookLangParser.parse` (or `CookLangParser.Parse` if using the C# package) on the string representation of the recipe you want parsed.
+Currently there's only one public API method, so using this library is as simple as:
+
+```fsharp
+open CookLangNet
+open System.IO
+
+let recipe = 
+    File.ReadAllText("path/to/file")
+    |> CookLangNet.CookLangParser.parse
+```
+
+Alternatively, if using the `CookLang.CSharp` package:
+
+```csharp
+using CookLangNet.CSharp;
+using System.IO;
+
+var recipeRawText = File.ReadAllText("path/to/file");
+var recipe = CookLangParser.Parse(recipeRawText);
+```
 
 ## Contributing
 This project has CI health checks that run whenever you PR against the main branch. In order to ensure your contributions will behave correctly on CI, run the tests and the linter locally.

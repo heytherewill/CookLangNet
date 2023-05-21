@@ -26,7 +26,7 @@ jobs:
       - name: Build
         run: dotnet build --configuration Release --no-restore
       - name: Lint
-        run: dotnet fantomas ./CookLangNet/ ./CookLangNet.CSharp/ ./CookLangNet.Tests/ --check
+        run: fantomas ./CookLangNet/ ./CookLangNet.CSharp/ ./CookLangNet.Tests/ --check
       - name: Test
         run: dotnet test --no-restore --logger "trx;LogFileName=test_results.trx"
       - name: Upload Test Results
